@@ -1,186 +1,77 @@
-# ビジネスマッチングプラットフォーム
+# Chatbot Project - Version 2.0
 
-営業会社と決裁者をマッチングするB2Bプラットフォームです。
+AI駆動の営業支援ツール群を含む包括的なチャットボットシステムです。
 
-## 機能
+## 主要コンポーネント
 
-### 営業会社向け機能
-- 決裁者の検索・閲覧
-- マッチング申請の送信
-- 申請状況の確認
-- 会社プロフィールの管理
+### 🤖 営業リスト生成エージェント
+- **場所**: `sales-lead-generator/`
+- **アクセス**: http://localhost:5000
+- **機能**:
+  - AI検索エンジン（Google Custom Search/SerpAPI）
+  - Claude APIによる企業情報抽出
+  - 自動スコアリング機能
+  - CRM連携（HubSpot/Salesforce/Zoho）
+  - データ出力（CSV/Excel/SQLite）
 
-### 決裁者向け機能
-- 営業会社の検索・閲覧
-- マッチング申請の受信・承認/拒否
-- 申請状況の確認
-- 個人プロフィールの管理
+### 📋 営業リスト管理ツール
+- **ファイル**: `sales-list-manager.html`
+- **機能**:
+  - 企業情報管理
+  - ステータス・優先度管理
+  - 検索・フィルター機能
+  - 統計表示・データエクスポート
+
+### ✅ Todoリストアプリ
+- **ファイル**: `todo-app.html`
+- **機能**: シンプルなタスク管理
 
 ## 技術スタック
 
-### バックエンド
-- Node.js
-- TypeScript
-- Express.js
-- PostgreSQL
-- JWT認証
-- bcryptjs（パスワードハッシュ化）
+- **フロントエンド**: HTML, CSS, JavaScript
+- **バックエンド**: Python Flask
+- **AI**: Anthropic Claude API
+- **検索**: Google Custom Search API, SerpAPI
+- **スクレイピング**: Playwright, requests
+- **データ**: SQLite, CSV, Excel出力
+- **CRM**: HubSpot/Salesforce/Zoho API連携
 
-### フロントエンド
-- React
-- TypeScript
-- React Router
-- Axios
-- Context API（状態管理）
+## インストール・実行
 
-## セットアップ
-
-### 前提条件
-- Node.js (v18以上)
-- PostgreSQL
-- npm または yarn
-
-### インストール
-
-1. リポジトリをクローン
+### 営業リスト生成エージェント
 ```bash
-git clone <repository-url>
-cd business-matching-platform
+cd sales-lead-generator
+pip install -r requirements.txt
+python web/app.py
+# http://localhost:5000 でアクセス
 ```
 
-2. バックエンドの依存関係をインストール
-```bash
-npm install
-```
+### 営業リスト管理ツール・Todoアプリ
+ブラウザでHTMLファイルを直接開く：
+- `sales-list-manager.html`
+- `todo-app.html`
 
-3. フロントエンドの依存関係をインストール
-```bash
-cd frontend
-npm install
-cd ..
-```
+## バージョン履歴
 
-4. 環境変数を設定
-```bash
-cp .env.example .env
-```
+### Version 2.0 (2025-09-25)
+- 営業リスト生成エージェント追加
+- 営業リスト管理ツール追加
+- Claude API連携機能実装
+- CRM連携機能追加
+- READMEファイル更新
 
-`.env`ファイルを編集して、以下の値を設定：
-- `DB_HOST`: PostgreSQLホスト
-- `DB_PORT`: PostgreSQLポート
-- `DB_NAME`: データベース名
-- `DB_USER`: データベースユーザー
-- `DB_PASSWORD`: データベースパスワード
-- `JWT_SECRET`: JWT署名用の秘密鍵
+### Version 1.0 (2025-08-21)
+- 初回リリース
+- 基本的なTodoリストアプリ
+- プロジェクト構造確立
 
-5. データベースセットアップ
-PostgreSQLで新しいデータベースを作成し、アプリケーションを起動すると自動でテーブルが作成されます。
+## 開発履歴
 
-### 開発環境での実行
-
-1. バックエンドサーバーを起動
-```bash
-npm run dev
-```
-
-2. 別のターミナルでフロントエンドを起動
-```bash
-cd frontend
-npm start
-```
-
-- バックエンド: http://localhost:3000
-- フロントエンド: http://localhost:3001
-
-## API エンドポイント
-
-### 認証
-- `POST /api/auth/register` - ユーザー登録
-- `POST /api/auth/login` - ログイン
-- `GET /api/auth/verify` - トークン検証
-
-### ユーザープロフィール
-- `POST /api/users/profile` - プロフィール作成
-- `GET /api/users/profile` - プロフィール取得
-- `PUT /api/users/profile` - プロフィール更新
-
-### マッチング
-- `GET /api/matching/search/decision-makers` - 決裁者検索（営業会社用）
-- `GET /api/matching/search/sales-companies` - 営業会社検索（決裁者用）
-- `POST /api/matching/request` - マッチング申請送信（営業会社用）
-- `PUT /api/matching/request/:requestId/respond` - 申請への応答（決裁者用）
-- `GET /api/matching/requests` - 申請一覧取得
-
-## テスト
-
-```bash
-npm test
-```
-
-## ビルド
-
-### バックエンド
-```bash
-npm run build
-npm start
-```
-
-### フロントエンド
-```bash
-cd frontend
-npm run build
-```
-
-## データベーススキーマ
-
-### users
-- id (UUID, Primary Key)
-- email (Unique)
-- password (Hashed)
-- user_type ('sales_company' | 'decision_maker')
-- is_verified (Boolean)
-- created_at, updated_at
-
-### sales_companies
-- id (UUID, Primary Key)
-- user_id (Foreign Key)
-- company_name
-- industry
-- description
-- website
-- employees
-- target_industries (Array)
-- services (Array)
-- created_at, updated_at
-
-### decision_makers
-- id (UUID, Primary Key)
-- user_id (Foreign Key)
-- first_name, last_name
-- position
-- company_name
-- industry
-- company_size
-- interests (Array)
-- budget
-- created_at, updated_at
-
-### match_requests
-- id (UUID, Primary Key)
-- sales_company_id (Foreign Key)
-- decision_maker_id (Foreign Key)
-- message
-- status ('pending' | 'accepted' | 'rejected')
-- created_at, updated_at
-
-## セキュリティ
-
-- パスワードはbcryptjsでハッシュ化
-- JWT トークンによる認証
-- CORS設定
-- Helmet.jsによるセキュリティヘッダー
-- 入力値検証
+詳細な開発履歴は `CLAUDE.md` を参照してください。
 
 ## ライセンス
 
-MIT
+MIT License
+
+---
+🤖 Generated with [Claude Code](https://claude.ai/code)

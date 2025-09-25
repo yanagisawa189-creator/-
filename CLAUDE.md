@@ -1,5 +1,7 @@
 # Claude Code Session History
 
+**バージョン: 2.0**
+
 ## Session Summary
 - 初回セッション: 2025-08-21
 - 現在のセッション: 2025-09-25
