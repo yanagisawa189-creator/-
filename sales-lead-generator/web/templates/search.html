@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}検索 - 営業リスト自動生成エージェント{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <h1 class="mb-4">
+            <i class="bi bi-search"></i> 営業リスト検索
+        </h1>
+
+        <!-- 検索フォーム -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">検索条件を入力してください</h5>
+            </div>
+            <div class="card-body">
+                <form id="search-form">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="industry" class="form-label">業種 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="industry" name="industry" required>
+                                <option value="">業種を選択してください</option>
+                                <option value="IT">IT・システム開発</option>
+                                <option value="製造業">製造業</option>
+                                <option value="小売">小売業</option>
+                                <option value="飲食">飲食業</option>
+                                <option value="建設">建設業</option>
+                                <option value="医療">医療・ヘルスケア</option>
+                                <option value="教育">教育・研修</option>
+                                <option value="金融">金融・保険</option>
+                                <option value="不動産">不動産</option>
+                                <option value="コンサルティング">コンサルティング</option>
+                                <option value="その他">その他</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="location" class="form-label">地域 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="location" name="location" required>
+                                <option value="">地域を選択してください</option>
+                                <option value="北海道">北海道</option>
+                                <option value="東京都">東京都</option>
+                                <option value="神奈川県">神奈川県</option>
+                                <option value="千葉県">千葉県</option>
+                                <option value="埼玉県">埼玉県</option>
+                                <option value="大阪府">大阪府</option>
+                                <option value="京都府">京都府</option>
+                                <option value="兵庫県">兵庫県</option>
+                                <option value="愛知県">愛知県</option>
+                                <option value="福岡県">福岡県</option>
+                                <option value="その他">その他の地域</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="keywords" class="form-label">追加キーワード（オプション）</label>
+                        <input type="text" class="form-control" id="keywords" name="keywords"
+                               placeholder="システム開発, WEB制作, モバイルアプリ">
+                        <div class="form-text">カンマ区切りで複数のキーワードを入力できます</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="max_results" class="form-label">最大取得件数</label>
+                            <select class="form-select" id="max_results" name="max_results">
+                                <option value="10">10件</option>
+                                <option value="20" selected>20件</option>
+                                <option value="50">50件</option>
+                                <option value="100">100件</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="search-button">
+                            <i class="bi bi-search"></i> 検索開始
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 進行状況表示 -->
+        <div class="card d-none" id="progress-card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-hourglass-split"></i> 処理中...
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                         role="progressbar" style="width: 0%" id="progress-bar"></div>
+                </div>
+                <p class="mb-0" id="progress-message">検索を開始しています...</p>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        処理時間は検索条件や対象件数によって異なります（通常1-3分程度）
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- エラー表示 -->
+        <div class="alert alert-danger d-none" role="alert" id="error-alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>エラーが発生しました：</strong>
+            <span id="error-message"></span>
+        </div>
+
+        <!-- 使用上の注意 -->
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> 使用上の注意
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0 small">
+                    <li>検索には1-3分程度お時間をいただく場合があります</li>
+                    <li>取得した情報は営業活動の参考としてご利用ください</li>
+                    <li>各サイトの利用規約・robots.txtを遵守しています</li>
+                    <li>個人情報保護法に配慮した適切な利用をお願いします</li>
+                    <li>APIキーが設定されていない場合、デモモードで動作します</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('search-form');
+    const progressCard = document.getElementById('progress-card');
+    const progressBar = document.getElementById('progress-bar');
+    const progressMessage = document.getElementById('progress-message');
+    const errorAlert = document.getElementById('error-alert');
+    const errorMessage = document.getElementById('error-message');
+    const searchButton = document.getElementById('search-button');
+
+    // Socket.IO接続
+    const socket = io();
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        startSearch();
+    });
+
+    async function startSearch() {
+        // フォームデータ取得
+        const formData = new FormData(form);
+        const searchData = {
+            industry: formData.get('industry'),
+            location: formData.get('location'),
+            keywords: formData.get('keywords') ? formData.get('keywords').split(',').map(k => k.trim()) : [],
+            max_results: parseInt(formData.get('max_results'))
+        };
+
+        // バリデーション
+        if (!searchData.industry || !searchData.location) {
+            showError('業種と地域は必須項目です');
+            return;
+        }
+
+        // UI更新
+        hideError();
+        showProgress();
+        searchButton.disabled = true;
+
+        try {
+            const response = await fetch('/api/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(searchData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // WebSocketで進行状況を監視
+                const jobId = result.job_id;
+
+                socket.on('job_progress', function(data) {
+                    if (data.job_id === jobId) {
+                        updateProgress(data.progress, data.message);
+                    }
+                });
+
+                socket.on('job_completed', function(data) {
+                    if (data.job_id === jobId) {
+                        // 結果ページにリダイレクト
+                        window.location.href = `/results/${jobId}`;
+                    }
+                });
+
+                socket.on('job_error', function(data) {
+                    if (data.job_id === jobId) {
+                        showError(data.error);
+                        resetUI();
+                    }
+                });
+
+            } else {
+                showError(result.error || '検索の開始に失敗しました');
+                resetUI();
+            }
+
+        } catch (error) {
+            showError('ネットワークエラーが発生しました: ' + error.message);
+            resetUI();
+        }
+    }
+
+    function showProgress() {
+        progressCard.classList.remove('d-none');
+        updateProgress(0, '検索を開始しています...');
+    }
+
+    function updateProgress(percent, message) {
+        progressBar.style.width = percent + '%';
+        progressBar.setAttribute('aria-valuenow', percent);
+        progressMessage.textContent = message;
+    }
+
+    function showError(error) {
+        errorMessage.textContent = error;
+        errorAlert.classList.remove('d-none');
+    }
+
+    function hideError() {
+        errorAlert.classList.add('d-none');
+    }
+
+    function resetUI() {
+        progressCard.classList.add('d-none');
+        searchButton.disabled = false;
+    }
+
+    // キーワード入力の改善
+    const keywordsInput = document.getElementById('keywords');
+    keywordsInput.addEventListener('blur', function() {
+        // キーワードの整形（前後の空白削除、重複除去）
+        const keywords = this.value.split(',')
+            .map(k => k.trim())
+            .filter(k => k.length > 0)
+            .filter((k, index, array) => array.indexOf(k) === index);
+        this.value = keywords.join(', ');
+    });
+});
+</script>
+{% endblock %}

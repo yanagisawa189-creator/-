@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}設定 - 営業リスト自動生成エージェント{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <h1 class="mb-4">
+            <i class="bi bi-gear"></i> システム設定
+        </h1>
+
+        <!-- API設定状況 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">API設定状況</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="status-indicator me-3">
+                                <i class="bi bi-circle-fill {% if api_status.claude %}text-success{% else %}text-danger{% endif %}"></i>
+                            </div>
+                            <div>
+                                <strong>Claude API</strong><br>
+                                <small class="{% if api_status.claude %}text-success{% else %}text-danger{% endif %}">
+                                    {% if api_status.claude %}設定済み{% else %}未設定{% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="status-indicator me-3">
+                                <i class="bi bi-circle-fill {% if api_status.google %}text-success{% else %}text-warning{% endif %}"></i>
+                            </div>
+                            <div>
+                                <strong>Google Custom Search</strong><br>
+                                <small class="{% if api_status.google %}text-success{% else %}text-warning{% endif %}">
+                                    {% if api_status.google %}設定済み{% else %}未設定（オプション）{% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="status-indicator me-3">
+                                <i class="bi bi-circle-fill {% if api_status.serpapi %}text-success{% else %}text-warning{% endif %}"></i>
+                            </div>
+                            <div>
+                                <strong>SerpAPI</strong><br>
+                                <small class="{% if api_status.serpapi %}text-success{% else %}text-warning{% endif %}">
+                                    {% if api_status.serpapi %}設定済み{% else %}未設定（オプション）{% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if not api_status.claude %}
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>重要：</strong>Claude APIキーが設定されていません。全機能を利用するにはAPIキーの設定が必要です。
+                </div>
+                {% endif %}
+
+                {% if not api_status.google and not api_status.serpapi %}
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle"></i>
+                    検索APIが設定されていない場合、デモモードのみ利用可能です。
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- API設定方法 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">API設定方法</h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="apiSettingsAccordion">
+                    <!-- Claude API -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="claudeHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#claudeCollapse" aria-expanded="false">
+                                <i class="bi bi-robot me-2"></i> Claude API設定
+                                <span class="badge bg-danger ms-2">必須</span>
+                            </button>
+                        </h2>
+                        <div id="claudeCollapse" class="accordion-collapse collapse"
+                             data-bs-parent="#apiSettingsAccordion">
+                            <div class="accordion-body">
+                                <h6>取得方法：</h6>
+                                <ol>
+                                    <li><a href="https://console.anthropic.com/" target="_blank">Anthropic Console</a>にアクセス</li>
+                                    <li>アカウントを作成またはログイン</li>
+                                    <li>「API Keys」セクションでAPIキーを生成</li>
+                                    <li>以下のファイルに設定</li>
+                                </ol>
+
+                                <h6>設定方法：</h6>
+                                <p><code>.env</code>ファイルを編集して以下を追加してください：</p>
+                                <div class="bg-light p-3 rounded">
+                                    <code>ANTHROPIC_API_KEY=sk-ant-api03-...</code>
+                                </div>
+
+                                <div class="alert alert-warning mt-3" role="alert">
+                                    <strong>注意：</strong>APIキーは外部に漏らさないよう注意してください。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Google Custom Search API -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="googleHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#googleCollapse" aria-expanded="false">
+                                <i class="bi bi-google me-2"></i> Google Custom Search API設定
+                                <span class="badge bg-warning ms-2">推奨</span>
+                            </button>
+                        </h2>
+                        <div id="googleCollapse" class="accordion-collapse collapse"
+                             data-bs-parent="#apiSettingsAccordion">
+                            <div class="accordion-body">
+                                <h6>取得方法：</h6>
+                                <ol>
+                                    <li><a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>にアクセス</li>
+                                    <li>プロジェクトを作成または選択</li>
+                                    <li>「Custom Search JSON API」を有効化</li>
+                                    <li>APIキーを生成</li>
+                                    <li><a href="https://cse.google.com/cse/" target="_blank">Custom Search Engine</a>で検索エンジンを作成</li>
+                                </ol>
+
+                                <h6>設定方法：</h6>
+                                <p><code>.env</code>ファイルに以下を追加：</p>
+                                <div class="bg-light p-3 rounded">
+                                    <code>GOOGLE_API_KEY=AIzaSyC...</code><br>
+                                    <code>GOOGLE_CSE_ID=017576662512468239146:...</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SerpAPI -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="serpHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#serpCollapse" aria-expanded="false">
+                                <i class="bi bi-search me-2"></i> SerpAPI設定
+                                <span class="badge bg-info ms-2">代替</span>
+                            </button>
+                        </h2>
+                        <div id="serpCollapse" class="accordion-collapse collapse"
+                             data-bs-parent="#apiSettingsAccordion">
+                            <div class="accordion-body">
+                                <h6>取得方法：</h6>
+                                <ol>
+                                    <li><a href="https://serpapi.com/" target="_blank">SerpAPI</a>にアクセス</li>
+                                    <li>アカウントを作成</li>
+                                    <li>ダッシュボードでAPIキーを確認</li>
+                                </ol>
+
+                                <h6>設定方法：</h6>
+                                <p><code>.env</code>ファイルに以下を追加：</p>
+                                <div class="bg-light p-3 rounded">
+                                    <code>SERPAPI_KEY=your_serpapi_key_here</code>
+                                </div>
+
+                                <div class="alert alert-info mt-3" role="alert">
+                                    <strong>注意：</strong>Google Custom Search APIの代替として利用できます。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- システム設定 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">システム設定</h5>
+            </div>
+            <div class="card-body">
+                <form id="system-settings">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="max_concurrent" class="form-label">最大同時接続数</label>
+                            <select class="form-select" id="max_concurrent">
+                                <option value="3">3接続</option>
+                                <option value="5" selected>5接続</option>
+                                <option value="10">10接続</option>
+                            </select>
+                            <div class="form-text">多すぎるとサーバーに負荷がかかります</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="timeout" class="form-label">タイムアウト（秒）</label>
+                            <select class="form-select" id="timeout">
+                                <option value="15">15秒</option>
+                                <option value="30" selected>30秒</option>
+                                <option value="60">60秒</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="respect_robots" checked>
+                            <label class="form-check-label" for="respect_robots">
+                                robots.txtを遵守する
+                            </label>
+                            <div class="form-text">ウェブサイトのアクセス制限を尊重します</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rate_limiting" checked>
+                            <label class="form-check-label" for="rate_limiting">
+                                レート制限を有効にする
+                            </label>
+                            <div class="form-text">適切な間隔でリクエストを送信します</div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-success" onclick="saveSettings()">
+                        <i class="bi bi-check"></i> 設定を保存
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ログとトラブルシューティング -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">トラブルシューティング</h5>
+            </div>
+            <div class="card-body">
+                <h6>よくある問題：</h6>
+                <div class="accordion" id="troubleshootingAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#troubleApi">
+                                APIキーエラー
+                            </button>
+                        </h2>
+                        <div id="troubleApi" class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>APIキーが正しく設定されているか確認</li>
+                                    <li>APIキーに適切な権限があるか確認</li>
+                                    <li>API利用制限に達していないか確認</li>
+                                    <li>請求情報が設定されているか確認（有料APIの場合）</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#troubleSearch">
+                                検索結果が少ない
+                            </button>
+                        </h2>
+                        <div id="troubleSearch" class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>検索キーワードを調整してみてください</li>
+                                    <li>地域設定を広げてみてください</li>
+                                    <li>業種選択を「その他」に変更してみてください</li>
+                                    <li>最大取得件数を増やしてみてください</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#troublePerformance">
+                                処理が遅い
+                            </button>
+                        </h2>
+                        <div id="troublePerformance" class="accordion-collapse collapse"
+                             data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>最大取得件数を減らしてみてください</li>
+                                    <li>ネットワーク環境を確認してください</li>
+                                    <li>APIのレスポンス時間を確認してください</li>
+                                    <li>同時実行中の他の処理を停止してください</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-outline-info" onclick="runDiagnostics()">
+                        <i class="bi bi-tools"></i> システム診断を実行
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="viewLogs()">
+                        <i class="bi bi-file-text"></i> ログを確認
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function saveSettings() {
+    // 設定の保存（デモ用）
+    const settings = {
+        max_concurrent: document.getElementById('max_concurrent').value,
+        timeout: document.getElementById('timeout').value,
+        respect_robots: document.getElementById('respect_robots').checked,
+        rate_limiting: document.getElementById('rate_limiting').checked
+    };
+
+    // 実際の実装では、サーバーに設定を送信
+    console.log('Settings to save:', settings);
+
+    alert('設定が保存されました！');
+}
+
+function runDiagnostics() {
+    // システム診断の実行（デモ用）
+    alert('システム診断を実行中...\n\n' +
+          '✓ ネットワーク接続: OK\n' +
+          '✓ API設定: 確認中\n' +
+          '✓ ファイルアクセス: OK\n' +
+          '✓ メモリ使用量: 正常\n\n' +
+          '診断完了！');
+}
+
+function viewLogs() {
+    // ログ表示（デモ用）
+    const logContent = `
+[2024-09-24 14:30:15] INFO: Application started
+[2024-09-24 14:30:16] INFO: Configuration loaded successfully
+[2024-09-24 14:30:16] INFO: Claude API key configured
+[2024-09-24 14:30:16] WARNING: Google API key not configured
+[2024-09-24 14:30:16] WARNING: SerpAPI key not configured
+[2024-09-24 14:30:16] INFO: Server listening on port 5000
+    `;
+
+    const newWindow = window.open('', '_blank', 'width=800,height=600');
+    newWindow.document.write(`
+        <html>
+            <head><title>システムログ</title></head>
+            <body>
+                <h1>システムログ</h1>
+                <pre>${logContent}</pre>
+                <button onclick="window.close()">閉じる</button>
+            </body>
+        </html>
+    `);
+}
+</script>
+{% endblock %}

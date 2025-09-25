@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}デモ - 営業リスト自動生成エージェント{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <h1 class="mb-4">
+            <i class="bi bi-play-circle"></i> デモンストレーション
+        </h1>
+
+        <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle"></i>
+            <strong>デモモード：</strong>
+            このページでは実際のAPI呼び出しを行わず、サンプルデータを使用してシステムの動作を確認できます。
+        </div>
+
+        <!-- デモ実行カード -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">サンプル検索実行</h5>
+            </div>
+            <div class="card-body">
+                <p>以下の条件でデモ検索を実行します：</p>
+                <ul>
+                    <li><strong>業種：</strong> IT・システム開発</li>
+                    <li><strong>地域：</strong> 東京都</li>
+                    <li><strong>キーワード：</strong> システム開発, WEB制作</li>
+                </ul>
+
+                <button class="btn btn-primary btn-lg" id="demo-button" onclick="runDemo()">
+                    <i class="bi bi-play-fill"></i> デモを実行
+                </button>
+            </div>
+        </div>
+
+        <!-- 進行状況表示 -->
+        <div class="card d-none" id="demo-progress">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-hourglass-split"></i> デモ実行中...
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                         role="progressbar" style="width: 0%" id="demo-progress-bar"></div>
+                </div>
+                <p class="mb-0" id="demo-progress-message">処理を開始しています...</p>
+            </div>
+        </div>
+
+        <!-- 結果表示 -->
+        <div class="d-none" id="demo-results">
+            <!-- 統計カード -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center bg-primary text-white">
+                        <div class="card-body">
+                            <h3 class="card-title" id="total-count">-</h3>
+                            <p class="card-text">総リード数</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-success text-white">
+                        <div class="card-body">
+                            <h3 class="card-title" id="high-priority">-</h3>
+                            <p class="card-text">高優先度</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-warning text-white">
+                        <div class="card-body">
+                            <h3 class="card-title" id="medium-priority">-</h3>
+                            <p class="card-text">中優先度</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-secondary text-white">
+                        <div class="card-body">
+                            <h3 class="card-title" id="low-priority">-</h3>
+                            <p class="card-text">低優先度</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 結果テーブル -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">デモ結果（サンプルデータ）</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>会社名</th>
+                                    <th>業種</th>
+                                    <th>所在地</th>
+                                    <th>連絡先</th>
+                                    <th>スコア</th>
+                                    <th>優先度</th>
+                                </tr>
+                            </thead>
+                            <tbody id="demo-results-table">
+                                <!-- 動的に挿入 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 次のステップ -->
+            <div class="card mt-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-check-circle"></i> デモ完了！
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>デモが完了しました。実際の機能を使用するには：</p>
+                    <div class="d-grid gap-2 d-md-flex">
+                        <a href="{{ url_for('search') }}" class="btn btn-primary">
+                            <i class="bi bi-search"></i> 実際の検索を試す
+                        </a>
+                        <a href="{{ url_for('settings') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-gear"></i> APIキーを設定
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- システム説明 -->
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightbulb"></i> システムについて
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>主な機能：</h6>
+                <ul>
+                    <li><strong>自動検索：</strong> Google APIやSerpAPIで候補企業を検索</li>
+                    <li><strong>AI分析：</strong> Claude AIが企業情報を構造化抽出</li>
+                    <li><strong>情報補完：</strong> ドメインからメールアドレスを推定</li>
+                    <li><strong>スコアリング：</strong> 業種・規模・連絡先・地域から優先度算出</li>
+                    <li><strong>データ出力：</strong> CSV/Excel形式でダウンロード可能</li>
+                </ul>
+
+                <h6>処理フロー：</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ol>
+                            <li>検索条件の入力</li>
+                            <li>候補URL一覧を取得</li>
+                            <li>Webスクレイピング実行</li>
+                            <li>Claude AIで情報抽出</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <ol start="5">
+                            <li>追加情報の補完</li>
+                            <li>スコアリング・優先度付け</li>
+                            <li>結果の表示・出力</li>
+                            <li>CRM連携（オプション）</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let demoRunning = false;
+
+async function runDemo() {
+    if (demoRunning) return;
+
+    demoRunning = true;
+    const demoButton = document.getElementById('demo-button');
+    const progressCard = document.getElementById('demo-progress');
+    const resultsDiv = document.getElementById('demo-results');
+    const progressBar = document.getElementById('demo-progress-bar');
+    const progressMessage = document.getElementById('demo-progress-message');
+
+    // UI更新
+    demoButton.disabled = true;
+    progressCard.classList.remove('d-none');
+    resultsDiv.classList.add('d-none');
+
+    // 進行状況シミュレーション
+    const steps = [
+        { percent: 10, message: '検索エンジンを初期化しています...' },
+        { percent: 30, message: '候補企業を検索中...' },
+        { percent: 50, message: 'Webページを取得中...' },
+        { percent: 70, message: 'AI分析で情報を抽出中...' },
+        { percent: 85, message: '追加情報を補完中...' },
+        { percent: 95, message: 'スコアリングを実行中...' },
+        { percent: 100, message: '完了！結果を表示します。' }
+    ];
+
+    for (const step of steps) {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        updateProgress(step.percent, step.message);
+    }
+
+    // デモAPIを呼び出し
+    try {
+        const response = await fetch('/api/demo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showDemoResults(result);
+        } else {
+            alert('デモの実行に失敗しました: ' + (result.error || '不明なエラー'));
+        }
+
+    } catch (error) {
+        alert('デモの実行に失敗しました: ' + error.message);
+    } finally {
+        // UI をリセット
+        progressCard.classList.add('d-none');
+        demoButton.disabled = false;
+        demoRunning = false;
+    }
+}
+
+function updateProgress(percent, message) {
+    const progressBar = document.getElementById('demo-progress-bar');
+    const progressMessage = document.getElementById('demo-progress-message');
+
+    progressBar.style.width = percent + '%';
+    progressMessage.textContent = message;
+}
+
+function showDemoResults(result) {
+    // 統計情報を更新
+    document.getElementById('total-count').textContent = result.leads_count;
+    document.getElementById('high-priority').textContent = result.statistics.high_priority_leads;
+    document.getElementById('medium-priority').textContent = result.statistics.medium_priority_leads;
+    document.getElementById('low-priority').textContent = result.statistics.low_priority_leads;
+
+    // テーブルを更新
+    const tableBody = document.getElementById('demo-results-table');
+    tableBody.innerHTML = '';
+
+    result.top_leads.forEach((lead, index) => {
+        const priorityClass = lead.total_score >= 8 ? 'success' :
+                             lead.total_score >= 5 ? 'warning' : 'secondary';
+        const priorityText = lead.total_score >= 8 ? '高' :
+                            lead.total_score >= 5 ? '中' : '低';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>
+                <strong>${lead.company_name}</strong>
+                ${lead.url ? `<br><small><a href="${lead.url}" target="_blank" class="text-muted">${lead.url}</a></small>` : ''}
+            </td>
+            <td>${lead.industry || '-'}</td>
+            <td>${lead.location || '-'}</td>
+            <td>
+                ${lead.contact_email ? `<i class="bi bi-envelope"></i> <a href="mailto:${lead.contact_email}">${lead.contact_email}</a>` : ''}
+                ${lead.phone ? `<br><i class="bi bi-telephone"></i> <a href="tel:${lead.phone}">${lead.phone}</a>` : ''}
+                ${!lead.contact_email && !lead.phone ? '<span class="text-muted">-</span>' : ''}
+            </td>
+            <td>
+                <div class="d-flex align-items-center">
+                    <div class="progress me-2" style="width: 60px; height: 8px;">
+                        <div class="progress-bar bg-${priorityClass}"
+                             style="width: ${Math.round(lead.total_score / 13.0 * 100)}%"></div>
+                    </div>
+                    <small>${lead.total_score.toFixed(1)}</small>
+                </div>
+            </td>
+            <td>
+                <span class="badge bg-${priorityClass}">${priorityText}</span>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+
+    // 結果を表示
+    document.getElementById('demo-results').classList.remove('d-none');
+
+    // 結果セクションまでスクロール
+    document.getElementById('demo-results').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+{% endblock %}
