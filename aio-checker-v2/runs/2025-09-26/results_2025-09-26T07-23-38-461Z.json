@@ -1,0 +1,110 @@
+[
+  {
+    "run_at": "2025-09-26T07:23:34.680Z",
+    "engine": "google",
+    "device": "desktop",
+    "lang": "en",
+    "location": {
+      "type": "country",
+      "value": "United States"
+    },
+    "keyword": "weather today",
+    "aio_present": false,
+    "aio_sources": [],
+    "own_cited": false,
+    "own_cited_urls": [],
+    "serp_top100": [],
+    "job_status": "fail",
+    "error_message": "Google SERP for \"weather today\" failed after 3 attempts: Request failed with status code 401"
+  },
+  {
+    "run_at": "2025-09-26T07:23:34.680Z",
+    "engine": "yahoo",
+    "device": "desktop",
+    "lang": "en",
+    "location": {
+      "type": "country",
+      "value": "United States"
+    },
+    "keyword": "weather today",
+    "serp_top100": [
+      {
+        "rank": 1,
+        "domain": "yahoo.co.jp",
+        "url": "https://yahoo.co.jp/search/example1",
+        "title": "weather today - Yahoo!検索結果1"
+      },
+      {
+        "rank": 2,
+        "domain": "example.com",
+        "url": "https://example.com/page2",
+        "title": "weather today - 検索結果2"
+      },
+      {
+        "rank": 3,
+        "domain": "test.jp",
+        "url": "https://test.jp/article",
+        "title": "weather today - 検索結果3"
+      }
+    ],
+    "job_status": "ok",
+    "aio_present": false,
+    "aio_sources": [],
+    "own_cited": false,
+    "own_cited_urls": []
+  },
+  {
+    "run_at": "2025-09-26T07:23:38.460Z",
+    "engine": "google",
+    "device": "mobile",
+    "lang": "ja",
+    "location": {
+      "type": "country",
+      "value": "Japan"
+    },
+    "keyword": "天気 今日",
+    "aio_present": false,
+    "aio_sources": [],
+    "own_cited": false,
+    "own_cited_urls": [],
+    "serp_top100": [],
+    "job_status": "fail",
+    "error_message": "Google SERP for \"天気 今日\" failed after 3 attempts: Request failed with status code 401"
+  },
+  {
+    "run_at": "2025-09-26T07:23:38.460Z",
+    "engine": "yahoo",
+    "device": "mobile",
+    "lang": "ja",
+    "location": {
+      "type": "country",
+      "value": "Japan"
+    },
+    "keyword": "天気 今日",
+    "serp_top100": [
+      {
+        "rank": 1,
+        "domain": "yahoo.co.jp",
+        "url": "https://yahoo.co.jp/search/example1",
+        "title": "天気 今日 - Yahoo!検索結果1 (モバイル版)"
+      },
+      {
+        "rank": 2,
+        "domain": "example.com",
+        "url": "https://example.com/page2",
+        "title": "天気 今日 - 検索結果2 (モバイル版)"
+      },
+      {
+        "rank": 3,
+        "domain": "test.jp",
+        "url": "https://test.jp/article",
+        "title": "天気 今日 - 検索結果3 (モバイル版)"
+      }
+    ],
+    "job_status": "ok",
+    "aio_present": false,
+    "aio_sources": [],
+    "own_cited": false,
+    "own_cited_urls": []
+  }
+]
