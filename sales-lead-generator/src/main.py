@@ -48,7 +48,8 @@ class SalesLeadGenerator:
         additional_keywords: List[str] = None,
         max_results: int = None,
         export_formats: List[str] = None,
-        sync_to_crm: bool = False
+        sync_to_crm: bool = False,
+        wordpress_only: bool = False
     ) -> Dict:
         """
         営業リードを生成するメイン処理
@@ -87,9 +88,16 @@ class SalesLeadGenerator:
 
             logger.info(f"Successfully scraped {len(scraped_data)} pages")
 
+            # WordPressフィルタリング（指定時のみ）
+            if wordpress_only:
+                wordpress_data = [data for data in scraped_data if data.get('is_wordpress', False)]
+                logger.info(f"WordPress filtering: {len(wordpress_data)} WordPress sites found out of {len(scraped_data)} total")
+                scraped_data = wordpress_data
+
             if not scraped_data:
-                logger.warning("No data scraped")
-                return {"error": "No data could be scraped", "success": False}
+                error_msg = "No WordPress sites found" if wordpress_only else "No data could be scraped"
+                logger.warning(error_msg)
+                return {"error": error_msg, "success": False}
 
             # ステップ4: Claude による情報抽出
             logger.info("Starting Claude extraction...")

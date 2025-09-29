@@ -70,6 +70,16 @@
                                 <option value="100">100件</option>
                             </select>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">フィルタオプション</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="wordpress_only" name="wordpress_only">
+                                <label class="form-check-label" for="wordpress_only">
+                                    WordPressサイトのみ抽出
+                                </label>
+                                <div class="form-text">チェックするとWordPressで構築されたサイトのみを対象とします</div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="d-grid">
@@ -156,7 +166,8 @@ document.addEventListener('DOMContentLoaded', function() {
             industry: formData.get('industry'),
             location: formData.get('location'),
             keywords: formData.get('keywords') ? formData.get('keywords').split(',').map(k => k.trim()) : [],
-            max_results: parseInt(formData.get('max_results'))
+            max_results: parseInt(formData.get('max_results')),
+            wordpress_only: document.getElementById('wordpress_only').checked
         };
 
         // バリデーション

@@ -158,6 +158,9 @@ class WebScraper:
             'content': self._extract_main_content(soup),
         }
 
+        # WordPress検出
+        data['is_wordpress'] = self._detect_wordpress(soup, html_content)
+
         # 連絡先情報の抽出
         contact_info = self._extract_contact_info(soup, html_content)
         data.update(contact_info)
@@ -251,6 +254,111 @@ class WebScraper:
             contact_info['address'] = addresses[0]
 
         return contact_info
+
+    def _detect_wordpress(self, soup: BeautifulSoup, html_content: str) -> bool:
+        """
+        WordPressサイトかどうかを検出
+        """
+        # WordPress検出パターン
+        wordpress_indicators = [
+            # メタ生成器
+            'generator="WordPress',
+            'name="generator" content="WordPress',
+
+            # WordPressのデフォルトファイルパス
+            '/wp-content/',
+            '/wp-includes/',
+            '/wp-admin/',
+
+            # WordPressのデフォルトクラス名
+            'wp-content',
+            'wp-block',
+            'has-text-color',
+            'wp-element-',
+
+            # WordPressのAPIエンドポイント
+            '/wp-json/',
+            'wp.api',
+
+            # WordPressのデフォルトテーマ
+            'twentytwenty',
+            'twentynineteen',
+            'twentyeighteen',
+
+            # WordPressのコメント
+            '<!-- wp:',
+            '<!--WordPress',
+
+            # WordPressの関数
+            'wp_head',
+            'wp_footer',
+            'wp_enqueue_script',
+
+            # RSSフィード
+            '/?feed=rss',
+            '/?feed=rss2',
+            '/?feed=atom',
+        ]
+
+        # HTMLソース全体で検索（大文字小文字を無視）
+        html_lower = html_content.lower()
+
+        # 直接的な指標をチェック
+        for indicator in wordpress_indicators:
+            if indicator.lower() in html_lower:
+                return True
+
+        # メタタグからの検出
+        meta_generator = soup.find('meta', attrs={'name': 'generator'})
+        if meta_generator:
+            content = meta_generator.get('content', '').lower()
+            if 'wordpress' in content:
+                return True
+
+        # linkタグからの検出（RSSフィードなど）
+        links = soup.find_all('link')
+        for link in links:
+            href = link.get('href', '').lower()
+            if any(wp_path in href for wp_path in ['/wp-json/', '/?feed=', '/feed/']):
+                return True
+
+            # WordPress固有のCSS/JSファイル
+            if '/wp-content/' in href or '/wp-includes/' in href:
+                return True
+
+        # scriptタグからの検出
+        scripts = soup.find_all('script')
+        for script in scripts:
+            src = script.get('src', '').lower()
+            if src and ('/wp-content/' in src or '/wp-includes/' in src):
+                return True
+
+            # script内容からの検出
+            script_content = script.string
+            if script_content:
+                script_lower = script_content.lower()
+                if any(indicator in script_lower for indicator in ['wp.api', 'wp_ajax', 'wpapi']):
+                    return True
+
+        # bodyクラスからの検出
+        body = soup.find('body')
+        if body:
+            body_class = body.get('class', [])
+            if isinstance(body_class, list):
+                body_class = ' '.join(body_class).lower()
+            elif isinstance(body_class, str):
+                body_class = body_class.lower()
+
+            wordpress_body_classes = [
+                'wordpress', 'wp-', 'page-id-', 'post-', 'category-',
+                'tag-', 'author-', 'logged-in', 'wp-admin', 'wp-toolbar'
+            ]
+
+            for wp_class in wordpress_body_classes:
+                if wp_class in body_class:
+                    return True
+
+        return False
 
     async def _can_fetch(self, url: str) -> bool:
         """

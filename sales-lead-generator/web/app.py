@@ -78,6 +78,7 @@ class WebJobManager:
             location = search_params.get('location', '')
             keywords = search_params.get('keywords', [])
             max_results = search_params.get('max_results', 20)
+            wordpress_only = search_params.get('wordpress_only', False)
 
             # 非同期で実行
             loop = asyncio.new_event_loop()
@@ -90,7 +91,8 @@ class WebJobManager:
                     additional_keywords=keywords,
                     max_results=max_results,
                     export_formats=['csv'],
-                    sync_to_crm=False
+                    sync_to_crm=False,
+                    wordpress_only=wordpress_only
                 )
             )
 
@@ -189,7 +191,8 @@ def api_search():
             'industry': data.get('industry'),
             'location': data.get('location'),
             'keywords': data.get('keywords', []),
-            'max_results': min(data.get('max_results', 20), 100)  # 最大100件に制限
+            'max_results': min(data.get('max_results', 20), 100),  # 最大100件に制限
+            'wordpress_only': data.get('wordpress_only', False)
         }
 
         # ジョブを開始
