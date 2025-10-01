@@ -1,0 +1,52 @@
+homes:
+  columns:
+  - csv_column: タイトル
+    property_field: address
+  - csv_column: 販売価格
+    property_field: price
+  - csv_column: 専有面積
+    property_field: area_sqm
+  - csv_column: 間取詳細
+    property_field: layout
+  - csv_column: 築年数
+    property_field: built_year
+  - csv_column: 交通1
+    property_field: station
+  - csv_column: 交通1徒歩
+    property_field: walk_min
+  - csv_column: 物件PR
+    property_field: copy_content
+  - csv_column: 写真1
+    property_field: image_path_1
+  - csv_column: 写真2
+    property_field: image_path_2
+  - csv_column: 写真3
+    property_field: image_path_3
+suumo:
+  columns:
+  - csv_column: 物件名
+    property_field: address
+  - csv_column: 価格
+    format: 万円
+    property_field: price
+  - csv_column: 面積
+    format: ㎡
+    property_field: area_sqm
+  - csv_column: 間取り
+    property_field: layout
+  - csv_column: 築年
+    format: 築{value}年
+    property_field: built_year
+  - csv_column: 最寄駅
+    property_field: station
+  - csv_column: 徒歩分数
+    format: 徒歩{value}分
+    property_field: walk_min
+  - csv_column: PR文
+    property_field: copy_content
+  - csv_column: 画像パス1
+    property_field: image_path_1
+  - csv_column: 画像パス2
+    property_field: image_path_2
+  - csv_column: 画像パス3
+    property_field: image_path_3

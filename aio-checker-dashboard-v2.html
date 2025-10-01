@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIO Checker Dashboard V2 - 企業別AI Overviews監視システム</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            background: transparent;
+            color: #666;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #48bb78, #38b2ac);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+        }
+
+        input[type="text"],
+        input[type="url"],
+        select,
+        textarea {
+            padding: 10px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .company-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .company-item {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .company-item:hover {
+            background: #edf2f7;
+        }
+
+        .company-info h4 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .company-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .company-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-section {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .results-table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .results-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-danger {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .badge-warning {
+            background: #feebc8;
+            color: #744210;
+        }
+
+        .badge-info {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #2d3748;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .alert-warning {
+            background: #feebc8;
+            color: #744210;
+        }
+
+        .alert-danger {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .tag-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            min-height: 45px;
+        }
+
+        .tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+
+        .tag-remove {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .ga4-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .ga4-connected {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .ga4-disconnected {
+            background: #e2e8f0;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid,
+            .dashboard-grid,
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-bar,
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 AIO Checker Dashboard V2</h1>
+            <p class="subtitle">企業別AI Overviews監視システム - 200社対応版</p>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('dashboard')">📊 ダッシュボード</button>
+                <button class="tab" onclick="switchTab('companies')">🏢 企業管理</button>
+                <button class="tab" onclick="switchTab('results')">📈 検証結果</button>
+                <button class="tab" onclick="switchTab('comparison')">🔄 企業比較</button>
+                <button class="tab" onclick="switchTab('ga4')">📉 GA4連携</button>
+                <button class="tab" onclick="switchTab('alerts')">🔔 アラート</button>
+            </div>
+        </header>
+
+        <!-- ダッシュボードタブ -->
+        <div id="dashboard" class="tab-content active">
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCompanies">0</div>
+                    <div class="stat-label">登録企業数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalKeywords">0</div>
+                    <div class="stat-label">対策キーワード総数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avgAioRate">0%</div>
+                    <div class="stat-label">平均AIO検出率</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="ga4Connected">0</div>
+                    <div class="stat-label">GA4連携済み企業</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 全体統計</h3>
+                <div class="chart-container">
+                    <canvas id="overviewChart"></canvas>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>🎯 業種別AIO検出率</h3>
+                    <div class="chart-container">
+                        <canvas id="industryChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>📈 時系列推移</h3>
+                    <div class="chart-container">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 企業管理タブ -->
+        <div id="companies" class="tab-content">
+            <div class="controls">
+                <button onclick="openAddCompanyModal()">➕ 企業を追加</button>
+                <button class="btn-secondary" onclick="importCompaniesCSV()">📥 CSV一括インポート</button>
+                <button class="btn-secondary" onclick="exportCompaniesCSV()">📤 企業リストをエクスポート</button>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" id="companySearch" placeholder="企業名・ドメインで検索..." onkeyup="filterCompanies()">
+                <select id="industryFilter" onchange="filterCompanies()">
+                    <option value="">全業種</option>
+                    <option value="IT">IT・通信</option>
+                    <option value="製造">製造業</option>
+                    <option value="小売">小売・EC</option>
+                    <option value="サービス">サービス業</option>
+                    <option value="金融">金融・保険</option>
+                    <option value="医療">医療・ヘルスケア</option>
+                    <option value="不動産">不動産</option>
+                    <option value="その他">その他</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <h3>🏢 登録企業一覧</h3>
+                <div id="companiesList" class="company-list">
+                    <p style="text-align: center; color: #666; padding: 40px;">企業を追加してください</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 検証結果タブ -->
+        <div id="results" class="tab-content">
+            <div class="controls">
+                <button onclick="runAioCheck()">🔍 AIO検証を実行</button>
+                <button class="btn-secondary" onclick="loadResultsJSON()">📁 結果をインポート</button>
+                <button class="btn-secondary" onclick="exportResultsCSV()">📊 結果をエクスポート</button>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-group">
+                    <select id="companyFilter" onchange="filterResults()">
+                        <option value="">全企業</option>
+                    </select>
+                    <select id="aioFilter" onchange="filterResults()">
+                        <option value="">AIO検出状況</option>
+                        <option value="detected">検出あり</option>
+                        <option value="none">検出なし</option>
+                    </select>
+                    <select id="citationFilter" onchange="filterResults()">
+                        <option value="">自社引用状況</option>
+                        <option value="cited">引用あり</option>
+                        <option value="none">引用なし</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📋 検証結果一覧</h3>
+                <div id="resultsTable"></div>
+            </div>
+        </div>
+
+        <!-- 企業比較タブ -->
+        <div id="comparison" class="tab-content">
+            <div class="controls">
+                <select id="compareSelect" multiple style="height: 150px;">
+                    <option value="">企業を選択（複数選択可）</option>
+                </select>
+                <button onclick="compareCompanies()">📊 比較を実行</button>
+            </div>
+
+            <div class="card">
+                <h3>🔄 企業間比較</h3>
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🏆 ランキング</h3>
+                <div id="rankingTable"></div>
+            </div>
+        </div>
+
+        <!-- GA4連携タブ -->
+        <div id="ga4" class="tab-content">
+            <div class="card">
+                <h3>📉 GA4連携設定</h3>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Google Analytics 4のデータと連携して、AIO検出がトラフィックに与える影響を分析します。
+                </p>
+
+                <div class="form-group">
+                    <label>企業を選択</label>
+                    <select id="ga4CompanySelect" onchange="loadGA4Settings()">
+                        <option value="">企業を選択してください</option>
+                    </select>
+                </div>
+
+                <div id="ga4SettingsForm" style="display: none;">
+                    <div class="form-group">
+                        <label>GA4 プロパティID</label>
+                        <input type="text" id="ga4PropertyId" placeholder="123456789">
+                    </div>
+
+                    <div class="form-group">
+                        <label>認証方法</label>
+                        <select id="ga4AuthMethod">
+                            <option value="oauth">OAuth 2.0</option>
+                            <option value="service">サービスアカウント</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>APIキー / 認証情報</label>
+                        <textarea id="ga4Credentials" rows="4" placeholder="認証情報をJSON形式で入力"></textarea>
+                    </div>
+
+                    <button onclick="saveGA4Settings()">💾 設定を保存</button>
+                    <button class="btn-secondary" onclick="testGA4Connection()">🔌 接続テスト</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 GA4データ分析</h3>
+                <div id="ga4Analysis"></div>
+            </div>
+        </div>
+
+        <!-- アラートタブ -->
+        <div id="alerts" class="tab-content">
+            <div class="card">
+                <h3>🔔 アラート設定</h3>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="alertAioDetected" checked>
+                        新規AIO検出時に通知
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="alertCitationLost" checked>
+                        自社引用が減少した時に通知
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="alertRankDrop" checked>
+                        順位が下落した時に通知
+                    </label>
+                    <input type="number" id="rankDropThreshold" value="3" min="1" placeholder="下落順位の閾値">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="alertTrafficDrop">
+                        トラフィックが減少した時に通知（GA4連携必須）
+                    </label>
+                    <input type="number" id="trafficDropThreshold" value="20" min="1" max="100" placeholder="減少率の閾値（%）">
+                </div>
+
+                <div class="form-group">
+                    <label>通知方法</label>
+                    <select id="notificationMethod">
+                        <option value="browser">ブラウザ通知</option>
+                        <option value="email">メール通知</option>
+                        <option value="slack">Slack通知</option>
+                        <option value="webhook">Webhook</option>
+                    </select>
+                </div>
+
+                <button onclick="saveAlertSettings()">💾 アラート設定を保存</button>
+            </div>
+
+            <div class="card">
+                <h3>📬 アラート履歴</h3>
+                <div id="alertHistory"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 企業追加モーダル -->
+    <div id="addCompanyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>企業を追加</h2>
+                <button class="close-btn" onclick="closeModal('addCompanyModal')">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label>会社名 *</label>
+                <input type="text" id="companyName" required>
+            </div>
+
+            <div class="form-group">
+                <label>ドメイン *</label>
+                <input type="url" id="companyDomain" placeholder="https://example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label>業種</label>
+                <select id="companyIndustry">
+                    <option value="IT">IT・通信</option>
+                    <option value="製造">製造業</option>
+                    <option value="小売">小売・EC</option>
+                    <option value="サービス">サービス業</option>
+                    <option value="金融">金融・保険</option>
+                    <option value="医療">医療・ヘルスケア</option>
+                    <option value="不動産">不動産</option>
+                    <option value="その他">その他</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>対策キーワード（Enterで追加）</label>
+                <div id="keywordTags" class="tag-input"></div>
+                <input type="text" id="keywordInput" placeholder="キーワードを入力してEnter" onkeypress="addKeyword(event)">
+            </div>
+
+            <div class="form-group">
+                <label>担当者</label>
+                <input type="text" id="companyManager">
+            </div>
+
+            <div class="form-group">
+                <label>メモ</label>
+                <textarea id="companyMemo" rows="3"></textarea>
+            </div>
+
+            <button onclick="saveCompany()">💾 保存</button>
+        </div>
+    </div>
+
+    <script>
+        // グローバル変数
+        let companies = [];
+        let checkResults = [];
+        let currentKeywords = [];
+        let charts = {};
+
+        // ローカルストレージからデータを読み込み
+        function loadData() {
+            const savedCompanies = localStorage.getItem('aio_companies');
+            const savedResults = localStorage.getItem('aio_results');
+
+            if (savedCompanies) {
+                companies = JSON.parse(savedCompanies);
+            }
+            if (savedResults) {
+                checkResults = JSON.parse(savedResults);
+            }
+
+            updateDashboard();
+            renderCompaniesList();
+        }
+
+        // データを保存
+        function saveData() {
+            localStorage.setItem('aio_companies', JSON.stringify(companies));
+            localStorage.setItem('aio_results', JSON.stringify(checkResults));
+        }
+
+        // タブ切り替え
+        function switchTab(tabName) {
+            // タブボタンの更新
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // タブコンテンツの更新
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+
+            // タブ固有の初期化
+            if (tabName === 'ga4') {
+                updateGA4CompanySelect();
+            } else if (tabName === 'comparison') {
+                updateCompareSelect();
+            } else if (tabName === 'results') {
+                updateCompanyFilter();
+            }
+        }
+
+        // ダッシュボード更新
+        function updateDashboard() {
+            // 統計情報の更新
+            document.getElementById('totalCompanies').textContent = companies.length;
+
+            const totalKeywords = companies.reduce((sum, c) => sum + (c.keywords?.length || 0), 0);
+            document.getElementById('totalKeywords').textContent = totalKeywords;
+
+            const ga4Connected = companies.filter(c => c.ga4Connected).length;
+            document.getElementById('ga4Connected').textContent = ga4Connected;
+
+            // AIO検出率の計算
+            if (checkResults.length > 0) {
+                const aioDetected = checkResults.filter(r => r.aio_present).length;
+                const avgRate = Math.round((aioDetected / checkResults.length) * 100);
+                document.getElementById('avgAioRate').textContent = avgRate + '%';
+            }
+
+            updateCharts();
+        }
+
+        // チャート更新
+        function updateCharts() {
+            // 全体統計チャート
+            const ctx = document.getElementById('overviewChart');
+            if (ctx) {
+                if (charts.overview) charts.overview.destroy();
+
+                charts.overview = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['AIO検出', 'AIO未検出', '自社引用あり', '自社引用なし'],
+                        datasets: [{
+                            label: '件数',
+                            data: [
+                                checkResults.filter(r => r.aio_present).length,
+                                checkResults.filter(r => !r.aio_present).length,
+                                checkResults.filter(r => r.own_cited).length,
+                                checkResults.filter(r => !r.own_cited).length
+                            ],
+                            backgroundColor: ['#48bb78', '#e53e3e', '#667eea', '#cbd5e0']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+
+            // 業種別チャート
+            updateIndustryChart();
+        }
+
+        // 業種別チャート更新
+        function updateIndustryChart() {
+            const ctx = document.getElementById('industryChart');
+            if (!ctx) return;
+
+            if (charts.industry) charts.industry.destroy();
+
+            const industries = {};
+            companies.forEach(company => {
+                const industry = company.industry || 'その他';
+                if (!industries[industry]) {
+                    industries[industry] = { total: 0, aioDetected: 0 };
+                }
+                industries[industry].total++;
+
+                const companyResults = checkResults.filter(r => r.companyId === company.id && r.aio_present);
+                if (companyResults.length > 0) {
+                    industries[industry].aioDetected++;
+                }
+            });
+
+            charts.industry = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(industries),
+                    datasets: [{
+                        label: 'AIO検出率',
+                        data: Object.values(industries).map(i =>
+                            i.total > 0 ? Math.round((i.aioDetected / i.total) * 100) : 0
+                        ),
+                        backgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 企業追加モーダルを開く
+        function openAddCompanyModal() {
+            document.getElementById('addCompanyModal').classList.add('active');
+            currentKeywords = [];
+            document.getElementById('keywordTags').innerHTML = '';
+        }
+
+        // モーダルを閉じる
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            // フォームをリセット
+            if (modalId === 'addCompanyModal') {
+                document.getElementById('companyName').value = '';
+                document.getElementById('companyDomain').value = '';
+                document.getElementById('companyManager').value = '';
+                document.getElementById('companyMemo').value = '';
+                currentKeywords = [];
+                document.getElementById('keywordTags').innerHTML = '';
+            }
+        }
+
+        // キーワード追加
+        function addKeyword(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const input = event.target;
+                const keyword = input.value.trim();
+
+                if (keyword && !currentKeywords.includes(keyword)) {
+                    currentKeywords.push(keyword);
+                    renderKeywordTags();
+                    input.value = '';
+                }
+            }
+        }
+
+        // キーワードタグ表示
+        function renderKeywordTags() {
+            const container = document.getElementById('keywordTags');
+            container.innerHTML = currentKeywords.map((keyword, index) => `
+                <div class="tag">
+                    ${keyword}
+                    <button class="tag-remove" onclick="removeKeyword(${index})">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        // キーワード削除
+        function removeKeyword(index) {
+            currentKeywords.splice(index, 1);
+            renderKeywordTags();
+        }
+
+        // 企業保存
+        function saveCompany() {
+            const name = document.getElementById('companyName').value.trim();
+            const domain = document.getElementById('companyDomain').value.trim();
+
+            if (!name || !domain) {
+                alert('会社名とドメインは必須です');
+                return;
+            }
+
+            const company = {
+                id: Date.now().toString(),
+                name: name,
+                domain: domain,
+                industry: document.getElementById('companyIndustry').value,
+                keywords: [...currentKeywords],
+                manager: document.getElementById('companyManager').value.trim(),
+                memo: document.getElementById('companyMemo').value.trim(),
+                createdAt: new Date().toISOString(),
+                ga4Connected: false
+            };
+
+            companies.push(company);
+            saveData();
+            renderCompaniesList();
+            updateDashboard();
+            closeModal('addCompanyModal');
+        }
+
+        // 企業リスト表示
+        function renderCompaniesList() {
+            const container = document.getElementById('companiesList');
+
+            if (companies.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">企業を追加してください</p>';
+                return;
+            }
+
+            container.innerHTML = companies.map(company => `
+                <div class="company-item">
+                    <div class="company-info">
+                        <h4>${company.name}</h4>
+                        <p>
+                            ${company.domain} | ${company.industry || '未設定'} |
+                            キーワード: ${company.keywords?.length || 0}件
+                            ${company.ga4Connected ? '<span class="ga4-status ga4-connected">✓ GA4連携済み</span>' : '<span class="ga4-status ga4-disconnected">GA4未連携</span>'}
+                        </p>
+                    </div>
+                    <div class="company-actions">
+                        <button class="btn-small btn-secondary" onclick="editCompany('${company.id}')">編集</button>
+                        <button class="btn-small btn-danger" onclick="deleteCompany('${company.id}')">削除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 企業削除
+        function deleteCompany(companyId) {
+            if (confirm('この企業を削除しますか？')) {
+                companies = companies.filter(c => c.id !== companyId);
+                checkResults = checkResults.filter(r => r.companyId !== companyId);
+                saveData();
+                renderCompaniesList();
+                updateDashboard();
+            }
+        }
+
+        // 企業フィルタリング
+        function filterCompanies() {
+            const searchTerm = document.getElementById('companySearch').value.toLowerCase();
+            const industryFilter = document.getElementById('industryFilter').value;
+
+            const filtered = companies.filter(company => {
+                const matchSearch = !searchTerm ||
+                    company.name.toLowerCase().includes(searchTerm) ||
+                    company.domain.toLowerCase().includes(searchTerm);
+                const matchIndustry = !industryFilter || company.industry === industryFilter;
+                return matchSearch && matchIndustry;
+            });
+
+            const container = document.getElementById('companiesList');
+            container.innerHTML = filtered.map(company => `
+                <div class="company-item">
+                    <div class="company-info">
+                        <h4>${company.name}</h4>
+                        <p>
+                            ${company.domain} | ${company.industry || '未設定'} |
+                            キーワード: ${company.keywords?.length || 0}件
+                            ${company.ga4Connected ? '<span class="ga4-status ga4-connected">✓ GA4連携済み</span>' : '<span class="ga4-status ga4-disconnected">GA4未連携</span>'}
+                        </p>
+                    </div>
+                    <div class="company-actions">
+                        <button class="btn-small btn-secondary" onclick="editCompany('${company.id}')">編集</button>
+                        <button class="btn-small btn-danger" onclick="deleteCompany('${company.id}')">削除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // CSV一括インポート
+        function importCompaniesCSV() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n');
+                    let imported = 0;
+
+                    // ヘッダー行をスキップ
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+
+                        const [name, domain, industry, keywords, manager] = line.split(',').map(s => s.trim());
+                        if (name && domain) {
+                            companies.push({
+                                id: Date.now().toString() + i,
+                                name: name,
+                                domain: domain,
+                                industry: industry || 'その他',
+                                keywords: keywords ? keywords.split('|') : [],
+                                manager: manager || '',
+                                memo: '',
+                                createdAt: new Date().toISOString(),
+                                ga4Connected: false
+                            });
+                            imported++;
+                        }
+                    }
+
+                    saveData();
+                    renderCompaniesList();
+                    updateDashboard();
+                    alert(`${imported}件の企業をインポートしました`);
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // 企業リストエクスポート
+        function exportCompaniesCSV() {
+            const headers = ['会社名', 'ドメイン', '業種', 'キーワード', '担当者'];
+            const rows = companies.map(c => [
+                c.name,
+                c.domain,
+                c.industry || '',
+                c.keywords?.join('|') || '',
+                c.manager || ''
+            ]);
+
+            const csv = [headers, ...rows]
+                .map(row => row.map(field => `"${field}"`).join(','))
+                .join('\n');
+
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `companies-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // AIOチェック実行
+        function runAioCheck() {
+            if (companies.length === 0) {
+                alert('企業を登録してください');
+                return;
+            }
+
+            alert('AIOチェック機能はバックエンドAPIが必要です。デモデータを生成します。');
+            generateDemoResults();
+        }
+
+        // デモ結果生成
+        function generateDemoResults() {
+            checkResults = [];
+            companies.forEach(company => {
+                company.keywords?.forEach(keyword => {
+                    checkResults.push({
+                        id: Date.now().toString() + Math.random(),
+                        companyId: company.id,
+                        companyName: company.name,
+                        keyword: keyword,
+                        run_at: new Date().toISOString(),
+                        engine: Math.random() > 0.5 ? 'google' : 'yahoo',
+                        aio_present: Math.random() > 0.5,
+                        own_cited: Math.random() > 0.7,
+                        serp_rank: Math.floor(Math.random() * 10) + 1,
+                        job_status: 'ok'
+                    });
+                });
+            });
+
+            saveData();
+            updateDashboard();
+            displayResults();
+            alert('デモデータを生成しました');
+        }
+
+        // 結果表示
+        function displayResults() {
+            const container = document.getElementById('resultsTable');
+
+            if (checkResults.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">検証結果がありません</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>企業名</th>
+                            <th>キーワード</th>
+                            <th>検索エンジン</th>
+                            <th>AIO検出</th>
+                            <th>自社引用</th>
+                            <th>順位</th>
+                            <th>実行日時</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${checkResults.map(result => `
+                            <tr>
+                                <td>${result.companyName}</td>
+                                <td>${result.keyword}</td>
+                                <td>${result.engine.toUpperCase()}</td>
+                                <td>
+                                    <span class="badge ${result.aio_present ? 'badge-success' : 'badge-danger'}">
+                                        ${result.aio_present ? '✓ 検出' : '✗ 未検出'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge ${result.own_cited ? 'badge-success' : 'badge-danger'}">
+                                        ${result.own_cited ? '★ あり' : '– なし'}
+                                    </span>
+                                </td>
+                                <td>${result.serp_rank}</td>
+                                <td>${new Date(result.run_at).toLocaleString('ja-JP')}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // フィルタ用のセレクト更新
+        function updateCompanyFilter() {
+            const select = document.getElementById('companyFilter');
+            select.innerHTML = '<option value="">全企業</option>' +
+                companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+        // 結果フィルタリング
+        function filterResults() {
+            const companyId = document.getElementById('companyFilter').value;
+            const aioFilter = document.getElementById('aioFilter').value;
+            const citationFilter = document.getElementById('citationFilter').value;
+
+            let filtered = [...checkResults];
+
+            if (companyId) {
+                filtered = filtered.filter(r => r.companyId === companyId);
+            }
+            if (aioFilter === 'detected') {
+                filtered = filtered.filter(r => r.aio_present);
+            } else if (aioFilter === 'none') {
+                filtered = filtered.filter(r => !r.aio_present);
+            }
+            if (citationFilter === 'cited') {
+                filtered = filtered.filter(r => r.own_cited);
+            } else if (citationFilter === 'none') {
+                filtered = filtered.filter(r => !r.own_cited);
+            }
+
+            // 表示ロジックは displayResults() と同様
+            const container = document.getElementById('resultsTable');
+            container.innerHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>企業名</th>
+                            <th>キーワード</th>
+                            <th>検索エンジン</th>
+                            <th>AIO検出</th>
+                            <th>自社引用</th>
+                            <th>順位</th>
+                            <th>実行日時</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filtered.map(result => `
+                            <tr>
+                                <td>${result.companyName}</td>
+                                <td>${result.keyword}</td>
+                                <td>${result.engine.toUpperCase()}</td>
+                                <td>
+                                    <span class="badge ${result.aio_present ? 'badge-success' : 'badge-danger'}">
+                                        ${result.aio_present ? '✓ 検出' : '✗ 未検出'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge ${result.own_cited ? 'badge-success' : 'badge-danger'}">
+                                        ${result.own_cited ? '★ あり' : '– なし'}
+                                    </span>
+                                </td>
+                                <td>${result.serp_rank}</td>
+                                <td>${new Date(result.run_at).toLocaleString('ja-JP')}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // 比較用セレクト更新
+        function updateCompareSelect() {
+            const select = document.getElementById('compareSelect');
+            select.innerHTML = companies.map(c =>
+                `<option value="${c.id}">${c.name}</option>`
+            ).join('');
+        }
+
+        // 企業比較
+        function compareCompanies() {
+            const select = document.getElementById('compareSelect');
+            const selectedIds = Array.from(select.selectedOptions).map(o => o.value);
+
+            if (selectedIds.length < 2) {
+                alert('2社以上選択してください');
+                return;
+            }
+
+            const selectedCompanies = companies.filter(c => selectedIds.includes(c.id));
+
+            const ctx = document.getElementById('comparisonChart');
+            if (charts.comparison) charts.comparison.destroy();
+
+            charts.comparison = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: selectedCompanies.map(c => c.name),
+                    datasets: [{
+                        label: 'AIO検出率 (%)',
+                        data: selectedCompanies.map(c => {
+                            const results = checkResults.filter(r => r.companyId === c.id);
+                            if (results.length === 0) return 0;
+                            const detected = results.filter(r => r.aio_present).length;
+                            return Math.round((detected / results.length) * 100);
+                        }),
+                        backgroundColor: '#667eea'
+                    }, {
+                        label: '自社引用率 (%)',
+                        data: selectedCompanies.map(c => {
+                            const results = checkResults.filter(r => r.companyId === c.id);
+                            if (results.length === 0) return 0;
+                            const cited = results.filter(r => r.own_cited).length;
+                            return Math.round((cited / results.length) * 100);
+                        }),
+                        backgroundColor: '#48bb78'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // ランキング表示
+            displayRanking();
+        }
+
+        // ランキング表示
+        function displayRanking() {
+            const ranking = companies.map(c => {
+                const results = checkResults.filter(r => r.companyId === c.id);
+                const aioRate = results.length > 0
+                    ? Math.round((results.filter(r => r.aio_present).length / results.length) * 100)
+                    : 0;
+                const citationRate = results.length > 0
+                    ? Math.round((results.filter(r => r.own_cited).length / results.length) * 100)
+                    : 0;
+                return { ...c, aioRate, citationRate, totalChecks: results.length };
+            }).sort((a, b) => b.aioRate - a.aioRate);
+
+            const container = document.getElementById('rankingTable');
+            container.innerHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>順位</th>
+                            <th>企業名</th>
+                            <th>業種</th>
+                            <th>AIO検出率</th>
+                            <th>自社引用率</th>
+                            <th>チェック数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${ranking.map((c, index) => `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${c.name}</td>
+                                <td>${c.industry || '未設定'}</td>
+                                <td>
+                                    <span class="badge ${c.aioRate > 50 ? 'badge-success' : 'badge-warning'}">
+                                        ${c.aioRate}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge ${c.citationRate > 30 ? 'badge-success' : 'badge-warning'}">
+                                        ${c.citationRate}%
+                                    </span>
+                                </td>
+                                <td>${c.totalChecks}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // GA4設定
+        function updateGA4CompanySelect() {
+            const select = document.getElementById('ga4CompanySelect');
+            select.innerHTML = '<option value="">企業を選択してください</option>' +
+                companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+        function loadGA4Settings() {
+            const companyId = document.getElementById('ga4CompanySelect').value;
+            if (!companyId) {
+                document.getElementById('ga4SettingsForm').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('ga4SettingsForm').style.display = 'block';
+            const company = companies.find(c => c.id === companyId);
+
+            if (company.ga4Settings) {
+                document.getElementById('ga4PropertyId').value = company.ga4Settings.propertyId || '';
+                document.getElementById('ga4AuthMethod').value = company.ga4Settings.authMethod || 'oauth';
+            }
+        }
+
+        function saveGA4Settings() {
+            const companyId = document.getElementById('ga4CompanySelect').value;
+            if (!companyId) return;
+
+            const company = companies.find(c => c.id === companyId);
+            company.ga4Settings = {
+                propertyId: document.getElementById('ga4PropertyId').value,
+                authMethod: document.getElementById('ga4AuthMethod').value,
+                credentials: document.getElementById('ga4Credentials').value
+            };
+            company.ga4Connected = true;
+
+            saveData();
+            updateDashboard();
+            renderCompaniesList();
+            alert('GA4設定を保存しました');
+        }
+
+        function testGA4Connection() {
+            alert('GA4接続テスト機能はバックエンドAPIが必要です。');
+        }
+
+        // アラート設定保存
+        function saveAlertSettings() {
+            const settings = {
+                aioDetected: document.getElementById('alertAioDetected').checked,
+                citationLost: document.getElementById('alertCitationLost').checked,
+                rankDrop: document.getElementById('alertRankDrop').checked,
+                rankDropThreshold: document.getElementById('rankDropThreshold').value,
+                trafficDrop: document.getElementById('alertTrafficDrop').checked,
+                trafficDropThreshold: document.getElementById('trafficDropThreshold').value,
+                notificationMethod: document.getElementById('notificationMethod').value
+            };
+
+            localStorage.setItem('aio_alert_settings', JSON.stringify(settings));
+            alert('アラート設定を保存しました');
+        }
+
+        // 結果エクスポート
+        function exportResultsCSV() {
+            if (checkResults.length === 0) {
+                alert('エクスポートする結果がありません');
+                return;
+            }
+
+            const headers = ['企業名', 'キーワード', '検索エンジン', 'AIO検出', '自社引用', '順位', '実行日時'];
+            const rows = checkResults.map(r => [
+                r.companyName,
+                r.keyword,
+                r.engine,
+                r.aio_present ? '1' : '0',
+                r.own_cited ? '1' : '0',
+                r.serp_rank,
+                new Date(r.run_at).toISOString()
+            ]);
+
+            const csv = [headers, ...rows]
+                .map(row => row.map(field => `"${field}"`).join(','))
+                .join('\n');
+
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `aio-results-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // 結果インポート
+        function loadResultsJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const results = JSON.parse(e.target.result);
+                        checkResults = results;
+                        saveData();
+                        displayResults();
+                        updateDashboard();
+                        alert('結果をインポートしました');
+                    } catch (error) {
+                        alert('JSONファイルの解析に失敗しました');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+        });
+    </script>
+</body>
+</html>

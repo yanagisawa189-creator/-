@@ -1,0 +1,26 @@
+{
+  "name": "aio-checker-v2",
+  "version": "1.0.0",
+  "description": "AIO表示チェックツール - SPEC準拠MVP",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "run:once": "ts-node src/index.ts --run-once",
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["AIO", "AI Overviews", "Google", "SERP", "SEO", "Yahoo"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "dotenv": "^17.2.2",
+    "googleapis": "^160.0.0"
+  }
+}
