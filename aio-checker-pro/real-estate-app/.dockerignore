@@ -1,0 +1,43 @@
+# Node modules
+node_modules
+frontend/node_modules
+frontend/dist
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# Logs
+*.log
+logs
+
+# Database (if using file-based DB)
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test images
+test_images
+
+# Development files
+*.md
+LICENSE

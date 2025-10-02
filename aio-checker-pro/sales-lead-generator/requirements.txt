@@ -1,0 +1,13 @@
+requests
+httpx
+beautifulsoup4
+python-dotenv
+pydantic
+aiohttp
+anthropic
+tldextract
+pytest
+pytest-asyncio
+flask
+flask-socketio
+eventlet

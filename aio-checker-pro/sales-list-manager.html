@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>営業リスト管理ツール</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f6fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(102,126,234,0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .toolbar {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .search-box {
+            position: relative;
+            min-width: 300px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid #e1e5e9;
+            border-radius: 25px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+
+        .filter-select {
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #0ea872;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #10b981);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .main-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #f8fafc;
+            padding: 20px 25px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .company-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .company-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .company-details h4 {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 3px;
+        }
+
+        .company-details p {
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-new {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-contact {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-negotiation {
+            background: #fde68a;
+            color: #f59e0b;
+        }
+
+        .status-proposal {
+            background: #e0e7ff;
+            color: #6366f1;
+        }
+
+        .status-closing {
+            background: #fecaca;
+            color: #dc2626;
+        }
+
+        .status-won {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-lost {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .priority-high {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .priority-medium {
+            color: #f59e0b;
+            font-weight: 500;
+        }
+
+        .priority-low {
+            color: #6b7280;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+            min-width: 50px;
+        }
+
+        .action-btn.edit {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .action-btn.contact {
+            background: #10b981;
+            color: white;
+        }
+
+        .action-btn.delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-filters {
+                flex-direction: column;
+            }
+
+            .search-box {
+                min-width: auto;
+            }
+
+            .toolbar-actions {
+                justify-content: center;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .table-container {
+                overflow-x: scroll;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 25px;
+            padding: 20px;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .pagination-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .export-dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-radius: 10px;
+            padding: 10px 0;
+            z-index: 100;
+            margin-top: 5px;
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dropdown-item:hover {
+            background: #f3f4f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 営業リスト管理ツール</h1>
+            <p>不動産会社・顧客情報を効率的に管理し、営業活動を最適化</p>
+        </div>
+
+        <div class="toolbar">
+            <div class="search-filters">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" id="searchInput" placeholder="会社名、担当者、電話番号で検索...">
+                </div>
+                <select class="filter-select" id="statusFilter">
+                    <option value="">すべてのステータス</option>
+                    <option value="new">新規</option>
+                    <option value="contact">初回コンタクト</option>
+                    <option value="negotiation">交渉中</option>
+                    <option value="proposal">提案中</option>
+                    <option value="closing">クロージング</option>
+                    <option value="won">受注</option>
+                    <option value="lost">失注</option>
+                </select>
+                <select class="filter-select" id="priorityFilter">
+                    <option value="">すべての優先度</option>
+                    <option value="high">高</option>
+                    <option value="medium">中</option>
+                    <option value="low">低</option>
+                </select>
+            </div>
+            <div class="toolbar-actions">
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    <span>➕</span>
+                    新規追加
+                </button>
+                <div class="export-dropdown">
+                    <button class="btn btn-success" id="exportBtn">
+                        <span>📤</span>
+                        エクスポート
+                    </button>
+                    <div class="dropdown-content hidden" id="exportDropdown">
+                        <div class="dropdown-item" onclick="exportData('excel')">
+                            <span>📊</span>
+                            Excel形式
+                        </div>
+                        <div class="dropdown-item" onclick="exportData('csv')">
+                            <span>📄</span>
+                            CSV形式
+                        </div>
+                        <div class="dropdown-item" onclick="exportData('json')">
+                            <span>🗃️</span>
+                            JSON形式
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="importData()">
+                    <span>📥</span>
+                    インポート
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon">🏢</div>
+                <div class="stat-number" id="totalCompanies">0</div>
+                <div class="stat-label">総企業数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📞</div>
+                <div class="stat-number" id="contactedCount">0</div>
+                <div class="stat-label">コンタクト済み</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-number" id="activeDeals">0</div>
+                <div class="stat-label">進行中案件</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-number" id="wonDeals">0</div>
+                <div class="stat-label">受注件数</div>
+            </div>
+        </div>
+
+        <div class="main-table">
+            <div class="table-header">
+                <h3 class="table-title">営業リスト</h3>
+                <div>
+                    <span id="listCount">0</span> 件表示中
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>会社情報</th>
+                            <th>担当者</th>
+                            <th>連絡先</th>
+                            <th>業種</th>
+                            <th>ステータス</th>
+                            <th>優先度</th>
+                            <th>最終コンタクト</th>
+                            <th>予想売上</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTable">
+                        <tr>
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <div class="empty-icon">🏢</div>
+                                    <p>営業リストがありません</p>
+                                    <p>「新規追加」ボタンから企業情報を追加してください</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <!-- 新規追加・編集モーダル -->
+    <div id="companyModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">新規企業追加</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <form id="companyForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">会社名 *</label>
+                        <input type="text" class="form-input" name="companyName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">担当者名</label>
+                        <input type="text" class="form-input" name="contactPerson">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">担当者役職</label>
+                        <input type="text" class="form-input" name="position">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">電話番号</label>
+                        <input type="tel" class="form-input" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">メールアドレス</label>
+                        <input type="email" class="form-input" name="email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">業種</label>
+                        <select class="form-input" name="industry">
+                            <option value="">選択してください</option>
+                            <option value="不動産売買">不動産売買</option>
+                            <option value="不動産賃貸">不動産賃貸</option>
+                            <option value="不動産管理">不動産管理</option>
+                            <option value="建設・リフォーム">建設・リフォーム</option>
+                            <option value="住宅メーカー">住宅メーカー</option>
+                            <option value="金融・保険">金融・保険</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ステータス</label>
+                        <select class="form-input" name="status">
+                            <option value="new">新規</option>
+                            <option value="contact">初回コンタクト</option>
+                            <option value="negotiation">交渉中</option>
+                            <option value="proposal">提案中</option>
+                            <option value="closing">クロージング</option>
+                            <option value="won">受注</option>
+                            <option value="lost">失注</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">優先度</label>
+                        <select class="form-input" name="priority">
+                            <option value="low">低</option>
+                            <option value="medium">中</option>
+                            <option value="high">高</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">予想売上（万円）</label>
+                        <input type="number" class="form-input" name="expectedRevenue" min="0" step="10">
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">住所</label>
+                        <input type="text" class="form-input" name="address">
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">備考・メモ</label>
+                        <textarea class="form-input form-textarea" name="notes" placeholder="営業メモ、特記事項など..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">キャンセル</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">追加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class SalesListManager {
+            constructor() {
+                this.salesList = JSON.parse(localStorage.getItem('salesList') || '[]');
+                this.editingId = null;
+                this.currentPage = 1;
+                this.itemsPerPage = 10;
+                this.filteredList = [...this.salesList];
+                
+                this.initializeEventListeners();
+                this.updateDisplay();
+                this.initializeSampleData();
+            }
+
+            initializeEventListeners() {
+                // 検索・フィルター
+                document.getElementById('searchInput').addEventListener('input', () => this.applyFilters());
+                document.getElementById('statusFilter').addEventListener('change', () => this.applyFilters());
+                document.getElementById('priorityFilter').addEventListener('change', () => this.applyFilters());
+
+                // フォーム送信
+                document.getElementById('companyForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveCompany();
+                });
+
+                // エクスポートドロップダウン
+                document.getElementById('exportBtn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dropdown = document.getElementById('exportDropdown');
+                    dropdown.classList.toggle('hidden');
+                });
+
+                // ドロップダウンを閉じる
+                document.addEventListener('click', () => {
+                    document.getElementById('exportDropdown').classList.add('hidden');
+                });
+            }
+
+            initializeSampleData() {
+                if (this.salesList.length === 0) {
+                    const sampleData = [
+                        {
+                            id: Date.now() + 1,
+                            companyName: '東京不動産株式会社',
+                            contactPerson: '田中 太郎',
+                            position: '営業部長',
+                            phone: '03-1234-5678',
+                            email: 'tanaka@tokyo-fudosan.co.jp',
+                            industry: '不動産売買',
+                            status: 'negotiation',
+                            priority: 'high',
+                            expectedRevenue: 500,
+                            address: '東京都渋谷区渋谷1-1-1',
+                            notes: '大型案件の可能性あり。次回訪問予定あり。',
+                            lastContact: new Date().toISOString(),
+                            createdAt: new Date().toISOString()
+                        },
+                        {
+                            id: Date.now() + 2,
+                            companyName: '横浜住宅販売',
+                            contactPerson: '山田 花子',
+                            position: '取締役',
+                            phone: '045-9876-5432',
+                            email: 'yamada@yokohama-jutaku.com',
+                            industry: '不動産賃貸',
+                            status: 'proposal',
+                            priority: 'medium',
+                            expectedRevenue: 300,
+                            address: '神奈川県横浜市西区みなとみらい2-2-1',
+                            notes: '提案書提出済み。来週回答予定。',
+                            lastContact: new Date(Date.now() - 86400000).toISOString(),
+                            createdAt: new Date(Date.now() - 172800000).toISOString()
+                        },
+                        {
+                            id: Date.now() + 3,
+                            companyName: '埼玉建設工業',
+                            contactPerson: '佐藤 次郎',
+                            position: '工事部部長',
+                            phone: '048-555-1234',
+                            email: 'sato@saitama-kensetsu.co.jp',
+                            industry: '建設・リフォーム',
+                            status: 'contact',
+                            priority: 'low',
+                            expectedRevenue: 150,
+                            address: '埼玉県さいたま市浦和区高砂3-3-3',
+                            notes: '初回面談完了。ニーズヒアリング中。',
+                            lastContact: new Date(Date.now() - 259200000).toISOString(),
+                            createdAt: new Date(Date.now() - 345600000).toISOString()
+                        }
+                    ];
+                    
+                    this.salesList = sampleData;
+                    this.saveToStorage();
+                    this.updateDisplay();
+                }
+            }
+
+            applyFilters() {
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                const statusFilter = document.getElementById('statusFilter').value;
+                const priorityFilter = document.getElementById('priorityFilter').value;
+
+                this.filteredList = this.salesList.filter(company => {
+                    const matchesSearch = !searchTerm || 
+                        company.companyName.toLowerCase().includes(searchTerm) ||
+                        (company.contactPerson && company.contactPerson.toLowerCase().includes(searchTerm)) ||
+                        (company.phone && company.phone.includes(searchTerm)) ||
+                        (company.email && company.email.toLowerCase().includes(searchTerm));
+                    
+                    const matchesStatus = !statusFilter || company.status === statusFilter;
+                    const matchesPriority = !priorityFilter || company.priority === priorityFilter;
+                    
+                    return matchesSearch && matchesStatus && matchesPriority;
+                });
+
+                this.currentPage = 1;
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                this.updateStats();
+                this.updateTable();
+                this.updatePagination();
+            }
+
+            updateStats() {
+                const total = this.salesList.length;
+                const contacted = this.salesList.filter(c => ['contact', 'negotiation', 'proposal', 'closing'].includes(c.status)).length;
+                const activeDeals = this.salesList.filter(c => ['negotiation', 'proposal', 'closing'].includes(c.status)).length;
+                const wonDeals = this.salesList.filter(c => c.status === 'won').length;
+
+                document.getElementById('totalCompanies').textContent = total;
+                document.getElementById('contactedCount').textContent = contacted;
+                document.getElementById('activeDeals').textContent = activeDeals;
+                document.getElementById('wonDeals').textContent = wonDeals;
+                document.getElementById('listCount').textContent = this.filteredList.length;
+            }
+
+            updateTable() {
+                const tbody = document.getElementById('salesTable');
+                const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+                const endIndex = startIndex + this.itemsPerPage;
+                const pageData = this.filteredList.slice(startIndex, endIndex);
+
+                if (pageData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <div class="empty-icon">🔍</div>
+                                    <p>条件に合致する企業が見つかりません</p>
+                                    <p>検索条件を変更するか、新しい企業を追加してください</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = pageData.map(company => {
+                    const avatar = company.companyName.charAt(0);
+                    const statusClass = `status-${company.status}`;
+                    const priorityClass = `priority-${company.priority}`;
+                    const lastContact = new Date(company.lastContact).toLocaleDateString('ja-JP');
+                    
+                    const statusNames = {
+                        new: '新規',
+                        contact: '初回コンタクト',
+                        negotiation: '交渉中',
+                        proposal: '提案中',
+                        closing: 'クロージング',
+                        won: '受注',
+                        lost: '失注'
+                    };
+
+                    const priorityNames = {
+                        high: '高',
+                        medium: '中',
+                        low: '低'
+                    };
+
+                    return `
+                        <tr>
+                            <td>
+                                <div class="company-info">
+                                    <div class="company-avatar">${avatar}</div>
+                                    <div class="company-details">
+                                        <h4>${company.companyName}</h4>
+                                        <p>${company.address || '住所未登録'}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <div style="font-weight: 500;">${company.contactPerson || '未登録'}</div>
+                                    <div style="font-size: 0.8rem; color: #6b7280;">${company.position || ''}</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.85rem;">
+                                    <div>📞 ${company.phone || '未登録'}</div>
+                                    <div>📧 ${company.email || '未登録'}</div>
+                                </div>
+                            </td>
+                            <td>${company.industry || '未設定'}</td>
+                            <td>
+                                <span class="status-badge ${statusClass}">${statusNames[company.status]}</span>
+                            </td>
+                            <td>
+                                <span class="${priorityClass}">${priorityNames[company.priority]}</span>
+                            </td>
+                            <td>${lastContact}</td>
+                            <td>${company.expectedRevenue ? `¥${company.expectedRevenue}万` : '-'}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn edit" onclick="salesManager.editCompany(${company.id})">編集</button>
+                                    <button class="action-btn contact" onclick="salesManager.updateLastContact(${company.id})">連絡</button>
+                                    <button class="action-btn delete" onclick="salesManager.deleteCompany(${company.id})">削除</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            updatePagination() {
+                const totalPages = Math.ceil(this.filteredList.length / this.itemsPerPage);
+                const pagination = document.getElementById('pagination');
+                
+                if (totalPages <= 1) {
+                    pagination.innerHTML = '';
+                    return;
+                }
+
+                let paginationHTML = '';
+                
+                // 前のページ
+                if (this.currentPage > 1) {
+                    paginationHTML += `<button class="pagination-btn" onclick="salesManager.goToPage(${this.currentPage - 1})">‹</button>`;
+                }
+
+                // ページ番号
+                for (let i = 1; i <= totalPages; i++) {
+                    const activeClass = i === this.currentPage ? 'active' : '';
+                    paginationHTML += `<button class="pagination-btn ${activeClass}" onclick="salesManager.goToPage(${i})">${i}</button>`;
+                }
+
+                // 次のページ
+                if (this.currentPage < totalPages) {
+                    paginationHTML += `<button class="pagination-btn" onclick="salesManager.goToPage(${this.currentPage + 1})">›</button>`;
+                }
+
+                pagination.innerHTML = paginationHTML;
+            }
+
+            goToPage(page) {
+                this.currentPage = page;
+                this.updateDisplay();
+            }
+
+            saveCompany() {
+                const formData = new FormData(document.getElementById('companyForm'));
+                const company = {
+                    companyName: formData.get('companyName'),
+                    contactPerson: formData.get('contactPerson'),
+                    position: formData.get('position'),
+                    phone: formData.get('phone'),
+                    email: formData.get('email'),
+                    industry: formData.get('industry'),
+                    status: formData.get('status'),
+                    priority: formData.get('priority'),
+                    expectedRevenue: parseInt(formData.get('expectedRevenue')) || null,
+                    address: formData.get('address'),
+                    notes: formData.get('notes'),
+                    lastContact: new Date().toISOString()
+                };
+
+                if (this.editingId) {
+                    // 編集モード
+                    const index = this.salesList.findIndex(c => c.id === this.editingId);
+                    this.salesList[index] = { ...this.salesList[index], ...company };
+                } else {
+                    // 新規追加
+                    company.id = Date.now();
+                    company.createdAt = new Date().toISOString();
+                    this.salesList.push(company);
+                }
+
+                this.saveToStorage();
+                this.closeModal();
+                this.applyFilters();
+                
+                const action = this.editingId ? '更新' : '追加';
+                alert(`企業「${company.companyName}」を${action}しました！`);
+            }
+
+            editCompany(id) {
+                const company = this.salesList.find(c => c.id === id);
+                if (!company) return;
+
+                this.editingId = id;
+                
+                // フォームに値を設定
+                const form = document.getElementById('companyForm');
+                Object.keys(company).forEach(key => {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        input.value = company[key] || '';
+                    }
+                });
+
+                document.getElementById('modalTitle').textContent = '企業情報編集';
+                document.getElementById('submitBtn').textContent = '更新';
+                document.getElementById('companyModal').classList.remove('hidden');
+            }
+
+            updateLastContact(id) {
+                const company = this.salesList.find(c => c.id === id);
+                if (company) {
+                    company.lastContact = new Date().toISOString();
+                    this.saveToStorage();
+                    this.updateDisplay();
+                    alert(`${company.companyName}の最終コンタクト日を更新しました！`);
+                }
+            }
+
+            deleteCompany(id) {
+                const company = this.salesList.find(c => c.id === id);
+                if (company && confirm(`企業「${company.companyName}」を削除しますか？`)) {
+                    this.salesList = this.salesList.filter(c => c.id !== id);
+                    this.saveToStorage();
+                    this.applyFilters();
+                }
+            }
+
+            exportData(format) {
+                if (this.salesList.length === 0) {
+                    alert('エクスポートするデータがありません');
+                    return;
+                }
+
+                const timestamp = new Date().toISOString().slice(0, 10);
+                
+                switch (format) {
+                    case 'excel':
+                        this.exportAsCSV(`営業リスト_${timestamp}.csv`, true);
+                        break;
+                    case 'csv':
+                        this.exportAsCSV(`営業リスト_${timestamp}.csv`);
+                        break;
+                    case 'json':
+                        this.exportAsJSON(`営業リスト_${timestamp}.json`);
+                        break;
+                }
+            }
+
+            exportAsCSV(filename, isExcel = false) {
+                const headers = [
+                    '会社名', '担当者名', '役職', '電話番号', 'メールアドレス', '業種',
+                    'ステータス', '優先度', '予想売上(万円)', '住所', '備考', '最終コンタクト', '作成日'
+                ];
+
+                const statusNames = {
+                    new: '新規', contact: '初回コンタクト', negotiation: '交渉中',
+                    proposal: '提案中', closing: 'クロージング', won: '受注', lost: '失注'
+                };
+
+                const priorityNames = { high: '高', medium: '中', low: '低' };
+
+                let csvContent = headers.join(',') + '\n';
+                
+                this.salesList.forEach(company => {
+                    const row = [
+                        `"${company.companyName || ''}"`,
+                        `"${company.contactPerson || ''}"`,
+                        `"${company.position || ''}"`,
+                        `"${company.phone || ''}"`,
+                        `"${company.email || ''}"`,
+                        `"${company.industry || ''}"`,
+                        `"${statusNames[company.status] || ''}"`,
+                        `"${priorityNames[company.priority] || ''}"`,
+                        company.expectedRevenue || '',
+                        `"${company.address || ''}"`,
+                        `"${company.notes || ''}"`,
+                        new Date(company.lastContact).toLocaleDateString('ja-JP'),
+                        new Date(company.createdAt).toLocaleDateString('ja-JP')
+                    ];
+                    csvContent += row.join(',') + '\n';
+                });
+
+                this.downloadFile(csvContent, filename, 'text/csv');
+            }
+
+            exportAsJSON(filename) {
+                const exportData = {
+                    exportDate: new Date().toISOString(),
+                    totalCount: this.salesList.length,
+                    companies: this.salesList
+                };
+                
+                const jsonContent = JSON.stringify(exportData, null, 2);
+                this.downloadFile(jsonContent, filename, 'application/json');
+            }
+
+            downloadFile(content, filename, mimeType) {
+                const blob = new Blob([content], { type: mimeType + ';charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            importData() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json,.csv';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            if (file.name.endsWith('.json')) {
+                                const data = JSON.parse(e.target.result);
+                                if (data.companies && Array.isArray(data.companies)) {
+                                    this.salesList = [...this.salesList, ...data.companies];
+                                    this.saveToStorage();
+                                    this.applyFilters();
+                                    alert(`${data.companies.length}件のデータをインポートしました！`);
+                                }
+                            } else {
+                                alert('CSV形式のインポートは開発中です。JSON形式をご利用ください。');
+                            }
+                        } catch (error) {
+                            alert('ファイルの読み込みに失敗しました。');
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            }
+
+            saveToStorage() {
+                localStorage.setItem('salesList', JSON.stringify(this.salesList));
+            }
+
+            openModal() {
+                this.editingId = null;
+                document.getElementById('companyForm').reset();
+                document.getElementById('modalTitle').textContent = '新規企業追加';
+                document.getElementById('submitBtn').textContent = '追加';
+                document.getElementById('companyModal').classList.remove('hidden');
+            }
+
+            closeModal() {
+                document.getElementById('companyModal').classList.add('hidden');
+                this.editingId = null;
+            }
+        }
+
+        // グローバル関数
+        function openAddModal() {
+            salesManager.openModal();
+        }
+
+        function closeModal() {
+            salesManager.closeModal();
+        }
+
+        function exportData(format) {
+            salesManager.exportData(format);
+        }
+
+        function importData() {
+            salesManager.importData();
+        }
+
+        // システム初期化
+        const salesManager = new SalesListManager();
+    </script>
+</body>
+</html>

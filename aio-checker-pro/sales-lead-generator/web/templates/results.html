@@ -1,0 +1,382 @@
+{% extends "base.html" %}
+
+{% block title %}検索結果 - 営業リスト自動生成エージェント{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-list-check"></i> 検索結果</h1>
+    <div>
+        <a href="{{ url_for('search') }}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left"></i> 新規検索
+        </a>
+    </div>
+</div>
+
+<!-- 統計情報 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="card-title text-primary">{{ result.leads_count }}</h3>
+                <p class="card-text">総リード数</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="card-title text-success">{{ result.statistics.high_priority_leads }}</h3>
+                <p class="card-text">高優先度</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="card-title text-warning">{{ result.statistics.medium_priority_leads }}</h3>
+                <p class="card-text">中優先度</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="card-title text-secondary">{{ result.statistics.low_priority_leads }}</h3>
+                <p class="card-text">低優先度</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 検索条件表示 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">検索条件</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <strong>業種：</strong> {{ result.search_info.industry }}
+            </div>
+            <div class="col-md-4">
+                <strong>地域：</strong> {{ result.search_info.location }}
+            </div>
+            <div class="col-md-4">
+                <strong>キーワード：</strong>
+                {% if result.search_info.additional_keywords %}
+                    {{ result.search_info.additional_keywords | join(', ') }}
+                {% else %}
+                    なし
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- スコア分布グラフ -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">優先度別分布</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="priorityChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">スコア統計</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h4 class="text-primary">{{ "%.2f" | format(result.statistics.score_stats.average) }}</h4>
+                            <p class="text-muted">平均スコア</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h4 class="text-success">{{ "%.2f" | format(result.statistics.score_stats.max) }}</h4>
+                            <p class="text-muted">最高スコア</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ダウンロードオプション -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">データエクスポート</h5>
+    </div>
+    <div class="card-body">
+        <div class="d-flex gap-2">
+            <a href="/api/download/{{ job_id }}/csv" class="btn btn-success">
+                <i class="bi bi-file-earmark-spreadsheet"></i> CSV ダウンロード
+            </a>
+            <button class="btn btn-info" onclick="exportToClipboard()">
+                <i class="bi bi-clipboard"></i> クリップボードにコピー
+            </button>
+        </div>
+        <small class="text-muted d-block mt-2">
+            CSVファイルは営業管理ツールにインポートできます
+        </small>
+    </div>
+</div>
+
+<!-- リード一覧テーブル -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">営業リード一覧</h5>
+        <div class="btn-group btn-group-sm" role="group">
+            <input type="radio" class="btn-check" name="sortOptions" id="sortByScore" checked>
+            <label class="btn btn-outline-primary" for="sortByScore">スコア順</label>
+
+            <input type="radio" class="btn-check" name="sortOptions" id="sortByName">
+            <label class="btn btn-outline-primary" for="sortByName">会社名順</label>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="leadsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 5%">#</th>
+                        <th style="width: 20%">会社名</th>
+                        <th style="width: 15%">業種</th>
+                        <th style="width: 15%">所在地</th>
+                        <th style="width: 20%">連絡先</th>
+                        <th style="width: 10%">スコア</th>
+                        <th style="width: 10%">優先度</th>
+                        <th style="width: 5%">詳細</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsTableBody">
+                    {% for lead in result.top_leads %}
+                    <tr data-score="{{ lead.total_score }}" data-name="{{ lead.company_name }}">
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <strong>{{ lead.company_name }}</strong>
+                            {% if lead.url %}
+                            <br><small><a href="{{ lead.url }}" target="_blank" class="text-muted">{{ lead.url }}</a></small>
+                            {% endif %}
+                        </td>
+                        <td>{{ lead.industry or '-' }}</td>
+                        <td>{{ lead.location or '-' }}</td>
+                        <td>
+                            {% if lead.contact_email %}
+                            <i class="bi bi-envelope"></i> <a href="mailto:{{ lead.contact_email }}">{{ lead.contact_email }}</a>
+                            {% endif %}
+                            {% if lead.phone %}
+                            <br><i class="bi bi-telephone"></i> <a href="tel:{{ lead.phone }}">{{ lead.phone }}</a>
+                            {% endif %}
+                            {% if not lead.contact_email and not lead.phone %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress me-2" style="width: 60px; height: 8px;">
+                                    <div class="progress-bar
+                                        {% if lead.total_score >= 8 %}bg-success
+                                        {% elif lead.total_score >= 5 %}bg-warning
+                                        {% else %}bg-secondary{% endif %}"
+                                        style="width: {{ (lead.total_score / 13.0 * 100) | int }}%"></div>
+                                </div>
+                                <small>{{ "%.1f" | format(lead.total_score) }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if lead.total_score >= 8 %}
+                            <span class="badge bg-success">高</span>
+                            {% elif lead.total_score >= 5 %}
+                            <span class="badge bg-warning">中</span>
+                            {% else %}
+                            <span class="badge bg-secondary">低</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" onclick="showDetails({{ loop.index0 }})">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 詳細モーダル -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">企業詳細情報</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- 動的に内容を挿入 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 結果データをJavaScript変数として渡す
+const resultData = {{ result | tojsonfilter }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 優先度別分布チャートの作成
+    createPriorityChart();
+
+    // ソート機能の実装
+    setupTableSorting();
+});
+
+function createPriorityChart() {
+    const ctx = document.getElementById('priorityChart').getContext('2d');
+    const stats = resultData.statistics;
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['高優先度', '中優先度', '低優先度'],
+            datasets: [{
+                data: [
+                    stats.high_priority_leads,
+                    stats.medium_priority_leads,
+                    stats.low_priority_leads
+                ],
+                backgroundColor: [
+                    '#198754', // green
+                    '#ffc107', // yellow
+                    '#6c757d'  // gray
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function setupTableSorting() {
+    const table = document.getElementById('leadsTable');
+    const tbody = document.getElementById('leadsTableBody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    document.getElementById('sortByScore').addEventListener('change', function() {
+        if (this.checked) {
+            const sortedRows = rows.sort((a, b) => {
+                const scoreA = parseFloat(a.dataset.score);
+                const scoreB = parseFloat(b.dataset.score);
+                return scoreB - scoreA; // 降順
+            });
+            tbody.innerHTML = '';
+            sortedRows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+                tbody.appendChild(row);
+            });
+        }
+    });
+
+    document.getElementById('sortByName').addEventListener('change', function() {
+        if (this.checked) {
+            const sortedRows = rows.sort((a, b) => {
+                const nameA = a.dataset.name;
+                const nameB = b.dataset.name;
+                return nameA.localeCompare(nameB, 'ja'); // 昇順
+            });
+            tbody.innerHTML = '';
+            sortedRows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+                tbody.appendChild(row);
+            });
+        }
+    });
+}
+
+function showDetails(index) {
+    const lead = resultData.top_leads[index];
+    const modalBody = document.getElementById('modalBody');
+
+    modalBody.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>基本情報</h6>
+                <table class="table table-sm">
+                    <tr><th>会社名</th><td>${lead.company_name}</td></tr>
+                    <tr><th>業種</th><td>${lead.industry || '-'}</td></tr>
+                    <tr><th>所在地</th><td>${lead.location || '-'}</td></tr>
+                    <tr><th>URL</th><td>${lead.url ? `<a href="${lead.url}" target="_blank">${lead.url}</a>` : '-'}</td></tr>
+                    <tr><th>説明</th><td>${lead.description || '-'}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>スコア詳細</h6>
+                <table class="table table-sm">
+                    <tr><th>総合スコア</th><td><strong>${lead.total_score.toFixed(2)}</strong></td></tr>
+                    <tr><th>業種一致度</th><td>${lead.industry_match_score.toFixed(2)} / 5.0</td></tr>
+                    <tr><th>事業規模</th><td>${lead.business_size_score.toFixed(2)} / 3.0</td></tr>
+                    <tr><th>連絡先充実度</th><td>${lead.contact_info_score.toFixed(2)} / 2.0</td></tr>
+                    <tr><th>所在地一致度</th><td>${lead.location_match_score.toFixed(2)} / 3.0</td></tr>
+                    <tr><th>信頼度</th><td>${(lead.confidence * 100).toFixed(1)}%</td></tr>
+                </table>
+            </div>
+        </div>
+
+        ${lead.additional_emails && lead.additional_emails.length > 0 ? `
+        <div class="mt-3">
+            <h6>追加連絡先</h6>
+            <ul class="list-unstyled">
+                ${lead.additional_emails.map(email => `<li><i class="bi bi-envelope"></i> <a href="mailto:${email}">${email}</a></li>`).join('')}
+            </ul>
+        </div>
+        ` : ''}
+    `;
+
+    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+    modal.show();
+}
+
+function exportToClipboard() {
+    const data = resultData.top_leads.map(lead => {
+        return [
+            lead.company_name,
+            lead.industry || '',
+            lead.location || '',
+            lead.contact_email || '',
+            lead.phone || '',
+            lead.total_score.toFixed(2)
+        ].join('\t');
+    });
+
+    const header = ['会社名', '業種', '所在地', '連絡先メール', '電話番号', 'スコア'].join('\t');
+    const csvContent = [header, ...data].join('\n');
+
+    navigator.clipboard.writeText(csvContent).then(() => {
+        alert('データをクリップボードにコピーしました！');
+    }).catch(() => {
+        alert('クリップボードへのコピーに失敗しました。');
+    });
+}
+</script>
+{% endblock %}
