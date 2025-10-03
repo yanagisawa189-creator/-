@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アルペンスキー監督
+    </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(15px);
+            padding: 20px 0;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 5px;
+            background: #f8f9fa;
+            border-radius: 25px;
+            padding: 5px;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .nav-tab:hover {
+            background: rgba(102,126,234,0.1);
+            color: #667eea;
+        }
+
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 60px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102,126,234,0.05);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+        
+        .upload-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 4px;
+        }
+        
+        .upload-tab {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .upload-tab:hover {
+            background: rgba(102,126,234,0.1);
+            color: #667eea;
+        }
+        
+        .upload-tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .upload-content {
+            display: none;
+        }
+        
+        .upload-content.active {
+            display: block;
+        }
+        
+        .youtube-input-area {
+            text-align: center;
+            padding: 40px 30px;
+        }
+        
+        .url-input-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .youtube-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .youtube-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .load-youtube-btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .load-youtube-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .analysis-panel {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .video-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .video-player {
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .video-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #dee2e6;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .analysis-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .analysis-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checklist {
+            list-style: none;
+        }
+
+        .checklist li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .checklist li:last-child {
+            border-bottom: none;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkbox.checked {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .score-display {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(#667eea 0% var(--score), #e9ecef var(--score) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .score-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            position: relative;
+            z-index: 1;
+        }
+
+        .recommendations {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .recommendation-item {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .recommendation-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .recommendation-desc {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .progress-history {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .history-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .improvement {
+            color: #28a745;
+            font-size: 0.8rem;
+        }
+
+        .decline {
+            color: #dc3545;
+            font-size: 0.8rem;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .analysis-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .video-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span>🎿</span>
+                <span>スキー滑走分析システム</span>
+            </div>
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-section="upload">動画分析</button>
+                <button class="nav-tab" data-section="progress">進歩記録</button>
+                <button class="nav-tab" data-section="training">トレーニング</button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 動画分析セクション -->
+        <section id="upload" class="section active">
+            <div class="upload-section">
+                <div class="upload-tabs">
+                    <button class="upload-tab active" data-type="file">📁 ファイル</button>
+                    <button class="upload-tab" data-type="youtube">📺 YouTube</button>
+                </div>
+                
+                <div id="fileUpload" class="upload-content active">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">🎥</div>
+                        <div class="upload-text">スキー滑走動画をアップロード</div>
+                        <div class="upload-subtext">ドラッグ&ドロップまたはクリックして選択</div>
+                        <div class="upload-subtext">対応形式: MP4, MOV, AVI (最大100MB)</div>
+                    </div>
+                    <input type="file" id="videoInput" class="file-input" accept="video/*">
+                </div>
+                
+                <div id="youtubeUpload" class="upload-content">
+                    <div class="youtube-input-area">
+                        <div class="upload-icon">📺</div>
+                        <div class="upload-text">YouTubeスキー動画のURLを入力</div>
+                        <div class="url-input-group">
+                            <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." class="youtube-input">
+                            <button class="load-youtube-btn" onclick="loadYouTubeVideo()">読み込み</button>
+                        </div>
+                        <div class="upload-subtext">YouTube動画のURLを貼り付けてください</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="analysisPanel" class="analysis-panel hidden">
+                <div class="video-section">
+                    <div class="video-container" id="videoContainer">
+                        <video id="videoPlayer" class="video-player" controls style="display: none;">
+                            お使いのブラウザは動画再生をサポートしていません。
+                        </video>
+                        <iframe id="youtubePlayer" class="video-player" style="display: none;" 
+                                frameborder="0" allowfullscreen>
+                        </iframe>
+                    </div>
+                    
+                    <div class="video-controls">
+                        <button class="control-btn btn-primary" onclick="analyzeVideo()">🔍 AI分析開始</button>
+                        <button class="control-btn btn-secondary" onclick="playSlowMotion()">⏪ スロー再生</button>
+                        <button class="control-btn btn-secondary" onclick="frameByFrame()">⏯️ コマ送り</button>
+                        <button class="control-btn btn-secondary" onclick="resetVideo()">🔄 リセット</button>
+                    </div>
+                </div>
+
+                <div class="analysis-sidebar">
+                    <div class="analysis-card">
+                        <h3 class="card-title">
+                            <span>🎯</span>
+                            技術評価
+                        </h3>
+                        <div class="score-display">
+                            <div class="score-circle" style="--score: 0%">
+                                <span class="score-number" id="totalScore">--</span>
+                            </div>
+                            <div>総合スコア</div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-card">
+                        <h3 class="card-title">
+                            <span>📝</span>
+                            分析チェックリスト
+                        </h3>
+                        <ul class="checklist" id="analysisChecklist">
+                            <li>
+                                <div class="checkbox" data-category="posture"></div>
+                                <span>基本姿勢 (前傾・重心)</span>
+                            </li>
+                            <li>
+                                <div class="checkbox" data-category="edging"></div>
+                                <span>エッジング技術</span>
+                            </li>
+                            <li>
+                                <div class="checkbox" data-category="turning"></div>
+                                <span>ターン技術</span>
+                            </li>
+                            <li>
+                                <div class="checkbox" data-category="rhythm"></div>
+                                <span>リズム・バランス</span>
+                            </li>
+                            <li>
+                                <div class="checkbox" data-category="line"></div>
+                                <span>ライン取り</span>
+                            </li>
+                            <li>
+                                <div class="checkbox" data-category="speed"></div>
+                                <span>スピードコントロール</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-card">
+                        <h3 class="card-title">
+                            <span>💡</span>
+                            改善提案
+                        </h3>
+                        <div class="recommendations" id="recommendations">
+                            <div class="recommendation-item">
+                                <div class="recommendation-title">AI分析を実行してください</div>
+                                <div class="recommendation-desc">動画をアップロード後、AI分析ボタンをクリックして詳細な技術分析を開始します。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 進歩記録セクション -->
+        <section id="progress" class="section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value">78.5</div>
+                    <div class="stat-label">平均スコア</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎿</div>
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">分析回数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-value">+12.3</div>
+                    <div class="stat-label">今月の改善</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-value">中級</div>
+                    <div class="stat-label">現在のレベル</div>
+                </div>
+            </div>
+
+            <div class="progress-history">
+                <h3 class="card-title">
+                    <span>📊</span>
+                    分析履歴
+                </h3>
+                <div class="history-item">
+                    <div>
+                        <div style="font-weight: 600;">2024/8/15 - 大回りターン練習</div>
+                        <div class="history-date">午後の練習セッション</div>
+                    </div>
+                    <div>
+                        <div class="history-score">85</div>
+                        <div class="improvement">+3.2</div>
+                    </div>
+                </div>
+                <div class="history-item">
+                    <div>
+                        <div style="font-weight: 600;">2024/8/12 - カービングターン</div>
+                        <div class="history-date">朝練習</div>
+                    </div>
+                    <div>
+                        <div class="history-score">82</div>
+                        <div class="improvement">+1.8</div>
+                    </div>
+                </div>
+                <div class="history-item">
+                    <div>
+                        <div style="font-weight: 600;">2024/8/10 - 小回りターン強化</div>
+                        <div class="history-date">集中練習</div>
+                    </div>
+                    <div>
+                        <div class="history-score">76</div>
+                        <div class="decline">-2.1</div>
+                    </div>
+                </div>
+                <div class="history-item">
+                    <div>
+                        <div style="font-weight: 600;">2024/8/8 - 基本フォーム確認</div>
+                        <div class="history-date">フォームチェック</div>
+                    </div>
+                    <div>
+                        <div class="history-score">79</div>
+                        <div class="improvement">+4.5</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- トレーニングセクション -->
+        <section id="training" class="section">
+            <div class="analysis-card">
+                <h3 class="card-title">
+                    <span>🏋️</span>
+                    個別トレーニングメニュー
+                </h3>
+                <div class="recommendations">
+                    <div class="recommendation-item">
+                        <div class="recommendation-title">基本姿勢改善トレーニング</div>
+                        <div class="recommendation-desc">
+                            • 壁際での前傾姿勢練習 (10分×3セット)<br>
+                            • バランスボールを使った体幹強化<br>
+                            • 鏡の前でのフォームチェック
+                        </div>
+                    </div>
+                    <div class="recommendation-item">
+                        <div class="recommendation-title">エッジング技術向上</div>
+                        <div class="recommendation-desc">
+                            • 平地での荷重移動練習<br>
+                            • 片足スキーでのバランス練習<br>
+                            • ゆるい斜面での角付け感覚養成
+                        </div>
+                    </div>
+                    <div class="recommendation-item">
+                        <div class="recommendation-title">ターン技術強化</div>
+                        <div class="recommendation-desc">
+                            • 大回り→小回り段階的練習<br>
+                            • リズム変化に対応する練習<br>
+                            • コーンを使ったライン取り練習
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- AI分析完了モーダル -->
+    <div id="analysisModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>✅ AI分析完了</h3>
+            <p>滑走動画の分析が完了しました。</p>
+            <p>詳細な結果と改善提案をご確認ください。</p>
+            <div style="margin-top: 30px;">
+                <button class="control-btn btn-primary" onclick="closeAnalysisModal()">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SkiAnalyzer {
+            constructor() {
+                this.currentSection = 'upload';
+                this.currentVideoType = 'file'; // 'file' or 'youtube'
+                this.analysisData = {
+                    posture: 0,
+                    edging: 0,
+                    turning: 0,
+                    rhythm: 0,
+                    line: 0,
+                    speed: 0
+                };
+                this.analysisHistory = JSON.parse(localStorage.getItem('skiAnalysis') || '[]');
+                
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                // ナビゲーション
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        const section = e.target.dataset.section;
+                        this.switchSection(section);
+                    });
+                });
+
+                // ファイルアップロード
+                const uploadArea = document.getElementById('uploadArea');
+                const videoInput = document.getElementById('videoInput');
+
+                uploadArea.addEventListener('click', () => videoInput.click());
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    this.handleFiles(e.dataTransfer.files);
+                });
+
+                videoInput.addEventListener('change', (e) => {
+                    this.handleFiles(e.target.files);
+                });
+
+                // チェックリストの手動操作
+                document.querySelectorAll('.checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('click', (e) => {
+                        const category = e.target.dataset.category;
+                        this.toggleCheckbox(category);
+                    });
+                });
+                
+                // アップロードタイプ切り替え
+                document.querySelectorAll('.upload-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        const type = e.target.dataset.type;
+                        this.switchUploadType(type);
+                    });
+                });
+                
+                // YouTubeURL入力でEnterキー
+                document.getElementById('youtubeUrl').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.loadYouTubeVideo();
+                    }
+                });
+            }
+
+            switchSection(section) {
+                // タブのアクティブ状態更新
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector(`[data-section="${section}"]`).classList.add('active');
+
+                // セクションの表示切替
+                document.querySelectorAll('.section').forEach(sec => {
+                    sec.classList.remove('active');
+                });
+                document.getElementById(section).classList.add('active');
+
+                this.currentSection = section;
+            }
+
+            handleFiles(files) {
+                const file = files[0];
+                if (!file || !file.type.startsWith('video/')) {
+                    alert('動画ファイルを選択してください');
+                    return;
+                }
+
+                if (file.size > 100 * 1024 * 1024) { // 100MB制限
+                    alert('ファイルサイズは100MB以下にしてください');
+                    return;
+                }
+
+                // 動画を読み込んで表示
+                const videoURL = URL.createObjectURL(file);
+                const videoPlayer = document.getElementById('videoPlayer');
+                videoPlayer.src = videoURL;
+
+                // 分析パネルを表示
+                document.getElementById('analysisPanel').classList.remove('hidden');
+                
+                // スコアリセット
+                this.resetAnalysis();
+                
+                // 動画プレーヤー表示
+                this.showVideoPlayer('file');
+            }
+
+            resetAnalysis() {
+                // チェックボックスリセット
+                document.querySelectorAll('.checkbox').forEach(checkbox => {
+                    checkbox.classList.remove('checked');
+                    checkbox.innerHTML = '';
+                });
+
+                // スコアリセット
+                this.updateTotalScore(0);
+                
+                // 推奨事項リセット
+                const recommendations = document.getElementById('recommendations');
+                recommendations.innerHTML = `
+                    <div class="recommendation-item">
+                        <div class="recommendation-title">AI分析を実行してください</div>
+                        <div class="recommendation-desc">動画をアップロード後、AI分析ボタンをクリックして詳細な技術分析を開始します。</div>
+                    </div>
+                `;
+            }
+
+            toggleCheckbox(category) {
+                const checkbox = document.querySelector(`[data-category="${category}"]`);
+                const isChecked = checkbox.classList.contains('checked');
+                
+                if (!isChecked) {
+                    checkbox.classList.add('checked');
+                    checkbox.innerHTML = '✓';
+                    this.analysisData[category] = 1;
+                } else {
+                    checkbox.classList.remove('checked');
+                    checkbox.innerHTML = '';
+                    this.analysisData[category] = 0;
+                }
+                
+                this.updateTotalScore();
+            }
+
+            updateTotalScore(manualScore = null) {
+                let score;
+                if (manualScore !== null) {
+                    score = manualScore;
+                } else {
+                    const total = Object.values(this.analysisData).reduce((sum, val) => sum + val, 0);
+                    score = Math.round((total / 6) * 100);
+                }
+                
+                const scoreCircle = document.querySelector('.score-circle');
+                const scoreNumber = document.getElementById('totalScore');
+                
+                scoreCircle.style.setProperty('--score', `${score}%`);
+                scoreNumber.textContent = score;
+            }
+
+            analyzeVideo() {
+                // AI分析のシミュレーション
+                const analysisButton = document.querySelector('[onclick="analyzeVideo()"]');
+                analysisButton.innerHTML = '⏳ 分析中...';
+                analysisButton.disabled = true;
+
+                // 2秒後に結果表示
+                setTimeout(() => {
+                    this.performAnalysis();
+                    analysisButton.innerHTML = '🔍 AI分析開始';
+                    analysisButton.disabled = false;
+                }, 2000);
+            }
+
+            performAnalysis() {
+                // ランダムな分析結果を生成（実際のAI分析をシミュレート）
+                const categories = ['posture', 'edging', 'turning', 'rhythm', 'line', 'speed'];
+                const scores = {};
+                let totalChecked = 0;
+
+                categories.forEach(category => {
+                    const score = Math.random() > 0.3 ? 1 : 0; // 70%の確率で良い評価
+                    scores[category] = score;
+                    totalChecked += score;
+                    
+                    const checkbox = document.querySelector(`[data-category="${category}"]`);
+                    if (score) {
+                        checkbox.classList.add('checked');
+                        checkbox.innerHTML = '✓';
+                    } else {
+                        checkbox.classList.remove('checked');
+                        checkbox.innerHTML = '';
+                    }
+                });
+
+                this.analysisData = scores;
+                this.updateTotalScore();
+                this.generateRecommendations();
+                
+                // 分析完了モーダル表示
+                document.getElementById('analysisModal').classList.remove('hidden');
+
+                // 分析データを保存
+                this.saveAnalysisResult();
+            }
+
+            generateRecommendations() {
+                const recommendations = document.getElementById('recommendations');
+                const issues = [];
+                
+                if (!this.analysisData.posture) {
+                    issues.push({
+                        title: '基本姿勢の改善',
+                        desc: '前傾姿勢と重心の位置を見直しましょう。膝の曲げ角度と上体の前傾を意識してください。'
+                    });
+                }
+                
+                if (!this.analysisData.edging) {
+                    issues.push({
+                        title: 'エッジング技術の向上',
+                        desc: 'スキーの角付けが不十分です。内脚の荷重移動と外脚への体重移動を練習してください。'
+                    });
+                }
+                
+                if (!this.analysisData.turning) {
+                    issues.push({
+                        title: 'ターン技術の強化',
+                        desc: 'ターンの切り替えがスムーズでありません。重心移動のタイミングを意識してください。'
+                    });
+                }
+                
+                if (!this.analysisData.rhythm) {
+                    issues.push({
+                        title: 'リズム・バランスの改善',
+                        desc: '滑走リズムが一定でありません。メトロノームに合わせた練習を推奨します。'
+                    });
+                }
+                
+                if (!this.analysisData.line) {
+                    issues.push({
+                        title: 'ライン取りの最適化',
+                        desc: 'ターン弧が大きすぎます。より効率的なラインを描くよう意識してください。'
+                    });
+                }
+                
+                if (!this.analysisData.speed) {
+                    issues.push({
+                        title: 'スピードコントロールの向上',
+                        desc: 'スピードの調節が不安定です。ターンによる減速技術を習得してください。'
+                    });
+                }
+
+                if (issues.length === 0) {
+                    recommendations.innerHTML = `
+                        <div class="recommendation-item">
+                            <div class="recommendation-title">🎉 素晴らしい滑走です！</div>
+                            <div class="recommendation-desc">すべての技術項目で良好な評価です。現在のレベルを維持し、より高度な技術に挑戦してみてください。</div>
+                        </div>
+                    `;
+                } else {
+                    recommendations.innerHTML = issues.map(issue => `
+                        <div class="recommendation-item">
+                            <div class="recommendation-title">${issue.title}</div>
+                            <div class="recommendation-desc">${issue.desc}</div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            saveAnalysisResult() {
+                const result = {
+                    date: new Date().toISOString(),
+                    score: Math.round((Object.values(this.analysisData).reduce((sum, val) => sum + val, 0) / 6) * 100),
+                    details: { ...this.analysisData }
+                };
+
+                this.analysisHistory.unshift(result);
+                this.analysisHistory = this.analysisHistory.slice(0, 20); // 最新20件まで保存
+                localStorage.setItem('skiAnalysis', JSON.stringify(this.analysisHistory));
+            }
+            
+            switchUploadType(type) {
+                this.currentVideoType = type;
+                
+                // タブの切り替え
+                document.querySelectorAll('.upload-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector(`[data-type="${type}"]`).classList.add('active');
+                
+                // コンテンツの切り替え
+                document.querySelectorAll('.upload-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(type === 'file' ? 'fileUpload' : 'youtubeUpload').classList.add('active');
+            }
+            
+            parseYouTubeUrl(url) {
+                // YouTube URLからビデオIDを抽出
+                const patterns = [
+                    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+                    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+                    /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/
+                ];
+                
+                for (let pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match) {
+                        return match[1];
+                    }
+                }
+                return null;
+            }
+            
+            loadYouTubeVideo() {
+                const urlInput = document.getElementById('youtubeUrl');
+                const url = urlInput.value.trim();
+                
+                if (!url) {
+                    alert('YouTube URLを入力してください');
+                    return;
+                }
+                
+                const videoId = this.parseYouTubeUrl(url);
+                if (!videoId) {
+                    alert('有効なYouTube URLを入力してください\n例: https://www.youtube.com/watch?v=VIDEO_ID');
+                    return;
+                }
+                
+                // YouTube埋め込み動画を設定
+                const youtubePlayer = document.getElementById('youtubePlayer');
+                const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1`;
+                youtubePlayer.src = embedUrl;
+                
+                // 動画プレーヤー表示
+                this.showVideoPlayer('youtube');
+                
+                // 分析パネルを表示
+                document.getElementById('analysisPanel').classList.remove('hidden');
+                
+                // 分析リセット
+                this.resetAnalysis();
+                
+                alert('YouTube動画を読み込みました！AI分析ボタンをクリックして分析を開始してください。');
+            }
+            
+            showVideoPlayer(type) {
+                const videoPlayer = document.getElementById('videoPlayer');
+                const youtubePlayer = document.getElementById('youtubePlayer');
+                
+                if (type === 'file') {
+                    videoPlayer.style.display = 'block';
+                    youtubePlayer.style.display = 'none';
+                } else {
+                    videoPlayer.style.display = 'none';
+                    youtubePlayer.style.display = 'block';
+                }
+            }
+
+            playSlowMotion() {
+                if (this.currentVideoType === 'file') {
+                    const video = document.getElementById('videoPlayer');
+                    video.playbackRate = 0.5;
+                    video.play();
+                } else {
+                    // YouTube動画の場合は通常再生（API制限のため）
+                    alert('YouTube動画ではスロー再生機能は利用できません。元の動画でスロー再生をご利用ください。');
+                }
+            }
+
+            frameByFrame() {
+                if (this.currentVideoType === 'file') {
+                    const video = document.getElementById('videoPlayer');
+                    if (video.paused) {
+                        video.currentTime += 1/30; // 1フレーム進める（30fps想定）
+                    } else {
+                        video.pause();
+                    }
+                } else {
+                    alert('YouTube動画ではコマ送り機能は利用できません。元の動画でコマ送りをご利用ください。');
+                }
+            }
+
+            resetVideo() {
+                if (this.currentVideoType === 'file') {
+                    const video = document.getElementById('videoPlayer');
+                    video.currentTime = 0;
+                    video.playbackRate = 1;
+                    video.pause();
+                } else {
+                    // YouTube動画をリロード
+                    const youtubePlayer = document.getElementById('youtubePlayer');
+                    const currentSrc = youtubePlayer.src;
+                    youtubePlayer.src = currentSrc;
+                }
+            }
+        }
+
+        // グローバル関数
+        function analyzeVideo() {
+            analyzer.analyzeVideo();
+        }
+        
+        function loadYouTubeVideo() {
+            analyzer.loadYouTubeVideo();
+        }
+
+        function playSlowMotion() {
+            analyzer.playSlowMotion();
+        }
+
+        function frameByFrame() {
+            analyzer.frameByFrame();
+        }
+
+        function resetVideo() {
+            analyzer.resetVideo();
+        }
+
+        function closeAnalysisModal() {
+            document.getElementById('analysisModal').classList.add('hidden');
+        }
+
+        // システム初期化
+        const analyzer = new SkiAnalyzer();
+    </script>
+</body>
+</html>

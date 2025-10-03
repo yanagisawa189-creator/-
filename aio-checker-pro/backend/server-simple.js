@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
+const RankingChecker = require('./services/rankingChecker');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,7 +18,11 @@ app.use('/reports', express.static(path.join(__dirname, '..', 'reports')));
 let users = [];
 let companies = [];
 let checkResults = [];
+let rankingHistory = []; // 順位履歴
 let authToken = null;
+
+// サービスインスタンス
+const rankingChecker = new RankingChecker();
 
 // JWT生成（簡易版）
 function generateToken(userId) {
@@ -246,6 +251,114 @@ app.get('/api/check/results', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Get results error:', error);
         res.status(500).json({ error: 'Failed to fetch results' });
+    }
+});
+
+// ==================== 順位チェックAPI ====================
+
+/**
+ * 順位チェック実行
+ */
+app.post('/api/ranking/check', authenticateToken, async (req, res) => {
+    try {
+        const { companyId, keywords, domain } = req.body;
+
+        if (!keywords || keywords.length === 0) {
+            return res.status(400).json({ error: 'Keywords are required' });
+        }
+
+        if (!domain) {
+            return res.status(400).json({ error: 'Domain is required' });
+        }
+
+        const company = companies.find(c => c.id === companyId && c.user_id === req.user.userId);
+        if (!company) {
+            return res.status(404).json({ error: 'Company not found' });
+        }
+
+        // 順位チェック実行
+        console.log(`Checking rankings for ${domain} with keywords:`, keywords);
+        const results = await rankingChecker.checkMultipleRankings(keywords, domain);
+
+        // 履歴に保存
+        results.forEach(result => {
+            const historyEntry = {
+                id: Date.now().toString() + Math.random(),
+                company_id: companyId,
+                user_id: req.user.userId,
+                ...result
+            };
+            rankingHistory.push(historyEntry);
+        });
+
+        res.json({ success: true, results });
+    } catch (error) {
+        console.error('Ranking check error:', error);
+        res.status(500).json({ error: error.message || 'Ranking check failed' });
+    }
+});
+
+/**
+ * 順位履歴取得
+ */
+app.get('/api/ranking/history', authenticateToken, async (req, res) => {
+    try {
+        const { companyId, keyword, days } = req.query;
+
+        let history = rankingHistory.filter(h => h.user_id === req.user.userId);
+
+        if (companyId) {
+            history = history.filter(h => h.company_id === companyId);
+        }
+
+        if (keyword) {
+            history = history.filter(h => h.keyword === keyword);
+        }
+
+        if (days) {
+            const daysAgo = new Date(Date.now() - parseInt(days) * 24 * 60 * 60 * 1000);
+            history = history.filter(h => new Date(h.searchDate) >= daysAgo);
+        }
+
+        // 日付降順でソート
+        history.sort((a, b) => new Date(b.searchDate) - new Date(a.searchDate));
+
+        res.json(history);
+    } catch (error) {
+        console.error('Get ranking history error:', error);
+        res.status(500).json({ error: 'Failed to fetch ranking history' });
+    }
+});
+
+/**
+ * 順位トレンド分析
+ */
+app.get('/api/ranking/trend', authenticateToken, async (req, res) => {
+    try {
+        const { companyId, keyword } = req.query;
+
+        if (!companyId || !keyword) {
+            return res.status(400).json({ error: 'Company ID and keyword are required' });
+        }
+
+        const history = rankingHistory.filter(h =>
+            h.user_id === req.user.userId &&
+            h.company_id === companyId &&
+            h.keyword === keyword &&
+            h.ranking !== null
+        );
+
+        const trend = rankingChecker.analyzeTrend(history);
+
+        res.json({
+            keyword,
+            trend,
+            dataPoints: history.length,
+            history: history.slice(0, 10) // 最新10件のみ返す
+        });
+    } catch (error) {
+        console.error('Get ranking trend error:', error);
+        res.status(500).json({ error: 'Failed to analyze trend' });
     }
 });
 

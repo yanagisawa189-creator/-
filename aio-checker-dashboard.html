@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIO Checker Dashboard - AI Overviews 監視ダッシュボード</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            background: linear-gradient(45deg, #48bb78, #38b2ac);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-block;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .results-table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .status-success {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-fail {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .aio-present {
+            color: #38a169;
+            font-weight: bold;
+        }
+
+        .aio-absent {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            button, .file-label {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 AIO Checker Dashboard</h1>
+            <p class="subtitle">AI Overviews（AIO）監視システム - リアルタイム分析ダッシュボード</p>
+            <div class="controls">
+                <button onclick="runAioChecker()">🔍 AIO Checker 実行</button>
+                <button onclick="loadLatestResults()">🔄 最新結果を読み込み</button>
+                <label for="fileInput" class="file-label">📁 JSONファイルを選択</label>
+                <input type="file" id="fileInput" class="file-input" accept=".json" onchange="handleFileUpload(event)">
+                <button onclick="exportResults()">📊 結果をエクスポート</button>
+            </div>
+        </header>
+
+        <div class="summary-stats" id="summaryStats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalQueries">-</div>
+                <div class="stat-label">総検索クエリ数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="aioDetected">-</div>
+                <div class="stat-label">AIO検出数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="ownCited">-</div>
+                <div class="stat-label">自社サイト引用数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successRate">-</div>
+                <div class="stat-label">実行成功率</div>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <h3>📈 AIO検出状況</h3>
+                <div class="chart-container">
+                    <canvas id="aioChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h3>🎯 検索エンジン別結果</h3>
+                <div class="chart-container">
+                    <canvas id="engineChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📋 詳細結果一覧</h3>
+            <div id="resultsContainer">
+                <div class="no-data">
+                    データを読み込んでください。「AIO Checker 実行」または「JSONファイルを選択」してください。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentResults = [];
+        let aioChart, engineChart;
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadLatestResults();
+        });
+
+        // チャートの初期化
+        function initializeCharts() {
+            const aioCtx = document.getElementById('aioChart').getContext('2d');
+            aioChart = new Chart(aioCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['AIO検出', 'AIO未検出'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#48bb78', '#e53e3e'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            const engineCtx = document.getElementById('engineChart').getContext('2d');
+            engineChart = new Chart(engineCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Google', 'Yahoo'],
+                    datasets: [{
+                        label: '成功',
+                        data: [0, 0],
+                        backgroundColor: '#48bb78'
+                    }, {
+                        label: '失敗',
+                        data: [0, 0],
+                        backgroundColor: '#e53e3e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // AIO Checker実行
+        async function runAioChecker() {
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '⏳ 実行中...';
+            button.disabled = true;
+
+            try {
+                // Node.jsスクリプトを実行（実際の環境では適切なAPIエンドポイントを使用）
+                alert('AIO Checker実行機能はバックエンドAPIが必要です。現在はデモデータを表示します。');
+                await loadDemoData();
+            } catch (error) {
+                console.error('AIO Checker実行エラー:', error);
+                alert('AIO Checkerの実行に失敗しました。');
+            } finally {
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // 最新結果を読み込み
+        async function loadLatestResults() {
+            try {
+                // 実際の環境では、生成されたJSONファイルを読み込む
+                await loadDemoData();
+            } catch (error) {
+                console.error('結果読み込みエラー:', error);
+            }
+        }
+
+        // デモデータの読み込み
+        async function loadDemoData() {
+            const demoResults = [
+                {
+                    run_at: new Date().toISOString(),
+                    engine: 'google',
+                    keyword: 'weather today',
+                    lang: 'en',
+                    location: { type: 'country', value: 'United States' },
+                    device: 'desktop',
+                    aio_present: true,
+                    aio_sources: ['weather.com', 'accuweather.com'],
+                    own_cited: false,
+                    own_cited_urls: [],
+                    serp_rank: null,
+                    job_status: 'ok',
+                    llm_engine: 'claude',
+                    llm_answer_present: true,
+                    llm_own_cited: false
+                },
+                {
+                    run_at: new Date().toISOString(),
+                    engine: 'yahoo',
+                    keyword: 'weather today',
+                    lang: 'en',
+                    location: { type: 'country', value: 'United States' },
+                    device: 'desktop',
+                    aio_present: false,
+                    aio_sources: [],
+                    own_cited: false,
+                    own_cited_urls: [],
+                    serp_rank: 5,
+                    job_status: 'ok'
+                },
+                {
+                    run_at: new Date().toISOString(),
+                    engine: 'google',
+                    keyword: '天気 今日',
+                    lang: 'ja',
+                    location: { type: 'country', value: 'Japan' },
+                    device: 'mobile',
+                    aio_present: true,
+                    aio_sources: ['tenki.jp', 'yahoo.co.jp'],
+                    own_cited: true,
+                    own_cited_urls: ['your-domain.com/weather'],
+                    serp_rank: 3,
+                    job_status: 'ok',
+                    llm_engine: 'claude',
+                    llm_answer_present: true,
+                    llm_own_cited: true
+                },
+                {
+                    run_at: new Date().toISOString(),
+                    engine: 'yahoo',
+                    keyword: '天気 今日',
+                    lang: 'ja',
+                    location: { type: 'country', value: 'Japan' },
+                    device: 'mobile',
+                    aio_present: false,
+                    aio_sources: [],
+                    own_cited: false,
+                    own_cited_urls: [],
+                    serp_rank: 7,
+                    job_status: 'ok'
+                }
+            ];
+
+            await displayResults(demoResults);
+        }
+
+        // ファイルアップロード処理
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const results = JSON.parse(e.target.result);
+                    displayResults(results);
+                } catch (error) {
+                    alert('JSONファイルの解析に失敗しました。');
+                    console.error('JSON解析エラー:', error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // 結果の表示
+        async function displayResults(results) {
+            currentResults = results;
+            updateSummaryStats(results);
+            updateCharts(results);
+            displayResultsTable(results);
+        }
+
+        // サマリー統計の更新
+        function updateSummaryStats(results) {
+            const totalQueries = results.length;
+            const aioDetected = results.filter(r => r.aio_present).length;
+            const ownCited = results.filter(r => r.own_cited || r.llm_own_cited).length;
+            const successful = results.filter(r => r.job_status === 'ok').length;
+            const successRate = totalQueries > 0 ? Math.round((successful / totalQueries) * 100) : 0;
+
+            document.getElementById('totalQueries').textContent = totalQueries;
+            document.getElementById('aioDetected').textContent = aioDetected;
+            document.getElementById('ownCited').textContent = ownCited;
+            document.getElementById('successRate').textContent = successRate + '%';
+        }
+
+        // チャートの更新
+        function updateCharts(results) {
+            // AIOチャートの更新
+            const aioPresent = results.filter(r => r.aio_present).length;
+            const aioAbsent = results.length - aioPresent;
+
+            aioChart.data.datasets[0].data = [aioPresent, aioAbsent];
+            aioChart.update();
+
+            // エンジンチャートの更新
+            const googleResults = results.filter(r => r.engine === 'google');
+            const yahooResults = results.filter(r => r.engine === 'yahoo');
+
+            const googleSuccess = googleResults.filter(r => r.job_status === 'ok').length;
+            const googleFail = googleResults.length - googleSuccess;
+            const yahooSuccess = yahooResults.filter(r => r.job_status === 'ok').length;
+            const yahooFail = yahooResults.length - yahooSuccess;
+
+            engineChart.data.datasets[0].data = [googleSuccess, yahooSuccess];
+            engineChart.data.datasets[1].data = [googleFail, yahooFail];
+            engineChart.update();
+        }
+
+        // 結果テーブルの表示
+        function displayResultsTable(results) {
+            const container = document.getElementById('resultsContainer');
+
+            if (results.length === 0) {
+                container.innerHTML = '<div class="no-data">結果がありません。</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>実行時刻</th>
+                            <th>エンジン</th>
+                            <th>キーワード</th>
+                            <th>言語</th>
+                            <th>デバイス</th>
+                            <th>AIO検出</th>
+                            <th>自社引用</th>
+                            <th>順位</th>
+                            <th>ステータス</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${results.map(result => `
+                            <tr>
+                                <td>${new Date(result.run_at).toLocaleString('ja-JP')}</td>
+                                <td>${result.engine.toUpperCase()}</td>
+                                <td>${result.keyword}</td>
+                                <td>${result.lang.toUpperCase()}</td>
+                                <td>${result.device}</td>
+                                <td>
+                                    <span class="${result.aio_present ? 'aio-present' : 'aio-absent'}">
+                                        ${result.aio_present ? '✓ 検出' : '✗ 未検出'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="${(result.own_cited || result.llm_own_cited) ? 'aio-present' : 'aio-absent'}">
+                                        ${(result.own_cited || result.llm_own_cited) ? '★ 引用あり' : '– 引用なし'}
+                                    </span>
+                                </td>
+                                <td>${result.serp_rank || 'N/A'}</td>
+                                <td>
+                                    <span class="status-${result.job_status === 'ok' ? 'success' : 'fail'}">
+                                        ${result.job_status === 'ok' ? '成功' : '失敗'}
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        // 結果のエクスポート
+        function exportResults() {
+            if (currentResults.length === 0) {
+                alert('エクスポートする結果がありません。');
+                return;
+            }
+
+            const csvContent = convertToCSV(currentResults);
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `aio-checker-results-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // CSV変換
+        function convertToCSV(results) {
+            const headers = ['実行時刻', 'エンジン', 'キーワード', '言語', 'デバイス', 'AIO検出', '自社引用', '順位', 'ステータス'];
+            const rows = results.map(result => [
+                new Date(result.run_at).toISOString(),
+                result.engine,
+                result.keyword,
+                result.lang,
+                result.device,
+                result.aio_present ? '1' : '0',
+                (result.own_cited || result.llm_own_cited) ? '1' : '0',
+                result.serp_rank || '',
+                result.job_status
+            ]);
+
+            const csvContent = [headers, ...rows]
+                .map(row => row.map(field => `"${field}"`).join(','))
+                .join('\n');
+
+            return '\uFEFF' + csvContent; // BOM for Excel compatibility
+        }
+    </script>
+</body>
+</html>

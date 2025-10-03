@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沖縄本島 防災計画比較システム</title>
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1>🏝️ 沖縄本島 防災計画比較システム</h1>
+            <p class="subtitle">各市町村の避難所・防災施設を横並び比較</p>
+        </header>
+
+        <div class="controls">
+            <div class="search-section">
+                <input type="text" id="searchInput" placeholder="市町村名で検索..." class="search-input">
+                <button onclick="clearSearch()" class="clear-btn">クリア</button>
+            </div>
+            
+            <div class="filter-section">
+                <label>災害種別フィルタ:</label>
+                <div class="hazard-filters">
+                    <button class="filter-btn" data-hazard="all" onclick="filterByHazard('all')">全て</button>
+                    <button class="filter-btn" data-hazard="津波" onclick="filterByHazard('津波')">津波</button>
+                    <button class="filter-btn" data-hazard="洪水" onclick="filterByHazard('洪水')">洪水</button>
+                    <button class="filter-btn" data-hazard="地震" onclick="filterByHazard('地震')">地震</button>
+                    <button class="filter-btn" data-hazard="土砂災害" onclick="filterByHazard('土砂災害')">土砂災害</button>
+                </div>
+            </div>
+
+            <div class="display-options">
+                <button onclick="toggleView('table')" class="view-btn active" id="tableViewBtn">表形式</button>
+                <button onclick="toggleView('chart')" class="view-btn" id="chartViewBtn">グラフ表示</button>
+            </div>
+        </div>
+
+        <div id="tableView" class="view-container">
+            <div class="table-container">
+                <table id="evacuationTable" class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-column="municipality_name">市町村 <span class="sort-arrow">↕</span></th>
+                            <th class="sortable" data-column="designated_shelters">指定避難所 <span class="sort-arrow">↕</span></th>
+                            <th class="sortable" data-column="emergency_evacuation_sites">緊急避難場所 <span class="sort-arrow">↕</span></th>
+                            <th class="sortable" data-column="tsunami_evacuation_buildings">津波避難ビル <span class="sort-arrow">↕</span></th>
+                            <th class="sortable" data-column="total_facilities">総施設数 <span class="sort-arrow">↕</span></th>
+                            <th>対応災害</th>
+                            <th>詳細</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- データはJavaScriptで動的に挿入 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="chartView" class="view-container" style="display: none;">
+            <div class="chart-controls">
+                <label>比較項目:</label>
+                <select id="chartMetric">
+                    <option value="designated_shelters">指定避難所数</option>
+                    <option value="emergency_evacuation_sites">緊急避難場所数</option>
+                    <option value="tsunami_evacuation_buildings">津波避難ビル数</option>
+                    <option value="total_facilities">総施設数</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </div>
+
+        <div id="detailPanel" class="detail-panel" style="display: none;">
+            <div class="detail-header">
+                <h3 id="detailTitle"></h3>
+                <button onclick="closeDetail()" class="close-btn">×</button>
+            </div>
+            <div id="detailContent" class="detail-content">
+                <!-- 詳細情報はJavaScriptで動的に挿入 -->
+            </div>
+        </div>
+
+        <footer class="main-footer">
+            <div class="stats">
+                <p id="statsText">データ読み込み中...</p>
+            </div>
+            <div class="credits">
+                <p>※ データは各市町村の公式防災計画から抽出（2025年度版）</p>
+                <p>最終更新: <span id="lastUpdated">2025-09-04</span></p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="assets/app.js"></script>
+</body>
+</html>

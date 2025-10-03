@@ -1,1 +1,25 @@
-node_modules
+# Environment files with secrets
+.env
+*.env
+!.env.example
+
+# AWS credentials files
+check-*.ps1
+get-*.ps1
+register-*.ps1
+
+# Google OAuth
+mail-agent/token.json
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+
+# Build
+dist/
+build/
+*.msi
+

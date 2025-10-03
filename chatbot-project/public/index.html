@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDFチャットボット</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 PDFチャットボット</h1>
+            <p>PDFやテキストファイルをアップロードして、内容について質問してください</p>
+        </div>
+
+        <!-- ファイルアップロード部分 -->
+        <div class="upload-section">
+            <div class="file-upload">
+                <input type="file" id="fileInput" accept=".pdf,.txt" multiple>
+                <label for="fileInput" class="upload-button">
+                    📁 ファイルを選択
+                </label>
+                <button id="uploadBtn" class="upload-button">アップロード</button>
+            </div>
+            <div id="uploadStatus" class="status-message"></div>
+            <div id="fileList" class="file-list"></div>
+        </div>
+
+        <!-- チャット部分 -->
+        <div class="chat-section">
+            <div id="chatHistory" class="chat-history">
+                <div class="message bot-message">
+                    <div class="message-content">
+                        こんにちは！ファイルをアップロードしてから質問をどうぞ 🤖
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <input type="text" id="messageInput" placeholder="質問を入力してください..." disabled>
+                <button id="sendBtn" class="send-button" disabled>送信</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>順位計測テスト - AIO Checker Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+
+        .rank-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .rank-top10 {
+            background: #28a745;
+            color: white;
+        }
+
+        .rank-top50 {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .rank-low {
+            background: #dc3545;
+            color: white;
+        }
+
+        .rank-none {
+            background: #6c757d;
+            color: white;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .keyword-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .keyword-tag {
+            display: inline-block;
+            background: #e0e7ff;
+            color: #4c51bf;
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 14px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🔍 AI研修サイト 順位計測テスト</h1>
+            <p class="subtitle">https://ai-kenshu.jp/ の検索順位をチェック</p>
+
+            <!-- ログインフォーム -->
+            <div id="loginForm">
+                <h2>ステップ1: ログイン</h2>
+                <div class="form-group">
+                    <label>メールアドレス</label>
+                    <input type="email" id="email" value="test@example.com" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>パスワード</label>
+                    <input type="password" id="password" value="password123" placeholder="パスワード">
+                </div>
+                <button class="btn" onclick="login()">ログイン</button>
+                <button class="btn btn-secondary" onclick="register()" style="margin-left: 10px;">新規登録</button>
+            </div>
+
+            <!-- メインコンテンツ -->
+            <div id="mainContent" class="hidden">
+                <h2>ステップ2: 企業・キーワード設定</h2>
+                <div class="form-group">
+                    <label>企業名</label>
+                    <input type="text" id="companyName" value="AI研修" readonly>
+                </div>
+                <div class="form-group">
+                    <label>ドメイン</label>
+                    <input type="text" id="domain" value="ai-kenshu.jp" readonly>
+                </div>
+                <button class="btn" onclick="createCompany()">企業を登録</button>
+
+                <div id="keywordSection" class="hidden" style="margin-top: 30px;">
+                    <h3>キーワード設定</h3>
+                    <div class="keyword-tags" id="keywordTags">
+                        <span class="keyword-tag">AI研修</span>
+                        <span class="keyword-tag">AI研修助成金</span>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button class="btn" onclick="checkRanking()">順位チェック実行</button>
+                    </div>
+                </div>
+
+                <!-- 結果表示 -->
+                <div id="results" class="hidden" style="margin-top: 30px;">
+                    <h2>ステップ3: 検索順位結果</h2>
+                    <div id="resultsContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let token = null;
+        let companyId = null;
+        const API_BASE = 'http://localhost:3000/api';
+        const keywords = ['AI研修', 'AI研修助成金'];
+        const domain = 'ai-kenshu.jp';
+
+        // 自動ログインチェック
+        window.onload = () => {
+            const savedToken = localStorage.getItem('aio_token');
+            if (savedToken) {
+                token = savedToken;
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+            }
+        };
+
+        async function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        company_name: 'AI研修テスト',
+                        plan: 'basic'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.token) {
+                    token = data.token;
+                    localStorage.setItem('aio_token', token);
+                    document.getElementById('loginForm').classList.add('hidden');
+                    document.getElementById('mainContent').classList.remove('hidden');
+                    alert('登録成功！');
+                } else {
+                    alert('登録失敗: ' + (data.error || 'エラー'));
+                }
+            } catch (error) {
+                alert('登録エラー: ' + error.message);
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.token) {
+                    token = data.token;
+                    localStorage.setItem('aio_token', token);
+                    document.getElementById('loginForm').classList.add('hidden');
+                    document.getElementById('mainContent').classList.remove('hidden');
+                    alert('ログイン成功！');
+                } else {
+                    alert('ログイン失敗: ' + (data.error || '認証情報が正しくありません'));
+                }
+            } catch (error) {
+                alert('ログインエラー: ' + error.message);
+            }
+        }
+
+        async function createCompany() {
+            const name = document.getElementById('companyName').value;
+            const domain = document.getElementById('domain').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/companies`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name,
+                        domain,
+                        industry: 'AI研修',
+                        keywords: keywords
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.id) {
+                    companyId = data.id;
+                    document.getElementById('keywordSection').classList.remove('hidden');
+                    alert('企業登録成功！キーワードが設定されました。');
+                } else {
+                    alert('企業登録失敗: ' + (data.error || 'エラー'));
+                }
+            } catch (error) {
+                alert('企業登録エラー: ' + error.message);
+            }
+        }
+
+        async function checkRanking() {
+            if (!companyId) {
+                alert('先に企業を登録してください');
+                return;
+            }
+
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('resultsContent').innerHTML = '<div class="loading">🔄 順位をチェック中...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/ranking/check`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        companyId,
+                        keywords,
+                        domain
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.results) {
+                    displayResults(data.results);
+                } else {
+                    document.getElementById('resultsContent').innerHTML =
+                        `<div class="status status-error">エラー: ${data.error || '順位チェック失敗'}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('resultsContent').innerHTML =
+                    `<div class="status status-error">エラー: ${error.message}</div>`;
+            }
+        }
+
+        function displayResults(results) {
+            let html = '<div class="metrics">';
+
+            results.forEach(result => {
+                const rankClass = result.ranking ?
+                    (result.ranking <= 10 ? 'rank-top10' :
+                     result.ranking <= 50 ? 'rank-top50' : 'rank-low') :
+                    'rank-none';
+
+                html += `
+                    <div class="metric">
+                        <div class="metric-label">「${result.keyword}」の順位</div>
+                        <div class="metric-value">
+                            ${result.ranking ? result.ranking + '位' : '圏外'}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            results.forEach(result => {
+                html += `
+                    <div class="result-card">
+                        <h3>キーワード: ${result.keyword}</h3>
+                        <p><strong>対象ドメイン:</strong> ${result.targetDomain}</p>
+                        ${result.ranking ? `
+                            <p><span class="rank-badge ${rankClass}">${result.ranking}位</span></p>
+                            <p><strong>タイトル:</strong> ${result.foundResult.title}</p>
+                            <p><strong>URL:</strong> <a href="${result.foundResult.url}" target="_blank">${result.foundResult.url}</a></p>
+                            <p><strong>スニペット:</strong> ${result.foundResult.snippet}</p>
+                        ` : `
+                            <p><span class="rank-badge rank-none">100位圏外</span></p>
+                            <p>検索結果100件中に見つかりませんでした</p>
+                        `}
+                        ${result.hasAIOverview ? `
+                            <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 8px;">
+                                <strong>🤖 AI Overviews検出:</strong> あり<br>
+                                <strong>引用:</strong> ${result.aiOverviewCitesDomain ? 'されている ✅' : 'されていない ❌'}
+                            </div>
+                        ` : ''}
+                        <p style="margin-top: 10px; color: #666; font-size: 14px;">
+                            チェック日時: ${new Date(result.searchDate).toLocaleString('ja-JP')}
+                        </p>
+                    </div>
+                `;
+            });
+
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

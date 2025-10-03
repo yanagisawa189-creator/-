@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レストラン POS システム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .pos-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            padding: 20px;
+            background: #34495e;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-menu {
+            flex: 1;
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #34495e;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: #3498db;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .order-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .menu-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .menu-header {
+            background: #3498db;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-tabs {
+            display: flex;
+            background: #ecf0f1;
+            padding: 0;
+        }
+
+        .category-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+        }
+
+        .category-tab:hover,
+        .category-tab.active {
+            background: white;
+            color: #3498db;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            background: white;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .menu-item:hover {
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52,152,219,0.2);
+        }
+
+        .menu-item h4 {
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .menu-item .price {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .order-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-header {
+            background: #e74c3c;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-selector {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .order-items {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-info h5 {
+            margin-bottom: 3px;
+        }
+
+        .item-info .item-price {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qty-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-btn:hover {
+            background: #2980b9;
+        }
+
+        .remove-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .order-summary {
+            background: #34495e;
+            color: white;
+            padding: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .total-row {
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-top: 1px solid #7f8c8d;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #219a52;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .management-section {
+            display: none;
+        }
+
+        .management-section.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .report-table {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #3498db;
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 20px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 250px;
+            }
+            
+            .order-section {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .menu-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="pos-container">
+        <div class="sidebar">
+            <div class="logo">🍽️ Restaurant POS</div>
+            <div class="nav-menu">
+                <div class="nav-item active" data-section="order">
+                    <span>🛒</span> 注文管理
+                </div>
+                <div class="nav-item" data-section="menu">
+                    <span>📋</span> メニュー管理
+                </div>
+                <div class="nav-item" data-section="sales">
+                    <span>📊</span> 売上分析
+                </div>
+                <div class="nav-item" data-section="tables">
+                    <span>🪑</span> テーブル管理
+                </div>
+                <div class="nav-item" data-section="settings">
+                    <span>⚙️</span> 設定
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h2 id="pageTitle">注文管理</h2>
+                <div class="user-info">
+                    <span id="currentTime"></span>
+                    <span>👤 スタッフ</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- 注文管理画面 -->
+                <div id="orderSection" class="management-section active">
+                    <div class="order-section">
+                        <div class="menu-panel">
+                            <div class="menu-header">
+                                <h3>メニュー</h3>
+                                <span id="menuItemCount">0 品目</span>
+                            </div>
+                            
+                            <div class="category-tabs">
+                                <button class="category-tab active" data-category="all">すべて</button>
+                                <button class="category-tab" data-category="food">料理</button>
+                                <button class="category-tab" data-category="drink">飲み物</button>
+                                <button class="category-tab" data-category="dessert">デザート</button>
+                            </div>
+                            
+                            <div class="menu-grid" id="menuGrid"></div>
+                        </div>
+
+                        <div class="order-panel">
+                            <div class="order-header">
+                                <h3>注文</h3>
+                                <select class="table-selector" id="tableSelector">
+                                    <option value="1">テーブル 1</option>
+                                    <option value="2">テーブル 2</option>
+                                    <option value="3">テーブル 3</option>
+                                    <option value="4">テーブル 4</option>
+                                    <option value="5">テーブル 5</option>
+                                </select>
+                            </div>
+                            
+                            <div class="order-items" id="orderItems">
+                                <div style="text-align: center; color: #7f8c8d; margin-top: 50px;">
+                                    注文がありません
+                                </div>
+                            </div>
+                            
+                            <div class="order-summary">
+                                <div class="summary-row">
+                                    <span>小計:</span>
+                                    <span id="subtotal">¥0</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>税金 (10%):</span>
+                                    <span id="tax">¥0</span>
+                                </div>
+                                <div class="summary-row total-row">
+                                    <span>合計:</span>
+                                    <span id="total">¥0</span>
+                                </div>
+                                
+                                <div class="action-buttons">
+                                    <button class="btn btn-secondary" onclick="clearOrder()">クリア</button>
+                                    <button class="btn btn-primary" onclick="processPayment()">会計</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 売上分析画面 -->
+                <div id="salesSection" class="management-section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>今日の売上</h3>
+                            <div class="value" id="todaySales">¥0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>注文数</h3>
+                            <div class="value" id="orderCount">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>平均客単価</h3>
+                            <div class="value" id="avgOrder">¥0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>人気商品</h3>
+                            <div class="value" id="popularItem">-</div>
+                        </div>
+                    </div>
+
+                    <div class="report-table">
+                        <div class="table-header">売上履歴</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>時間</th>
+                                    <th>テーブル</th>
+                                    <th>商品</th>
+                                    <th>金額</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesHistory">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: #7f8c8d;">データがありません</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 支払い完了モーダル -->
+    <div id="paymentModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>✅ 支払い完了</h3>
+            <p>ありがとうございました！</p>
+            <p><strong id="receiptTotal">¥0</strong></p>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="closePaymentModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class RestaurantPOS {
+            constructor() {
+                this.menu = [
+                    { id: 1, name: 'ハンバーガー', price: 800, category: 'food' },
+                    { id: 2, name: 'チーズバーガー', price: 900, category: 'food' },
+                    { id: 3, name: 'フライドポテト', price: 400, category: 'food' },
+                    { id: 4, name: 'チキンナゲット', price: 500, category: 'food' },
+                    { id: 5, name: 'サラダ', price: 600, category: 'food' },
+                    { id: 6, name: 'コーラ', price: 300, category: 'drink' },
+                    { id: 7, name: 'オレンジジュース', price: 300, category: 'drink' },
+                    { id: 8, name: 'コーヒー', price: 250, category: 'drink' },
+                    { id: 9, name: 'ビール', price: 500, category: 'drink' },
+                    { id: 10, name: 'アイスクリーム', price: 350, category: 'dessert' },
+                    { id: 11, name: 'ケーキ', price: 450, category: 'dessert' }
+                ];
+
+                this.currentOrder = [];
+                this.currentTable = 1;
+                this.salesData = JSON.parse(localStorage.getItem('posSales') || '[]');
+                this.currentCategory = 'all';
+
+                this.initializeEventListeners();
+                this.displayMenu();
+                this.updateOrderDisplay();
+                this.updateSalesStats();
+                this.startClock();
+            }
+
+            initializeEventListeners() {
+                // ナビゲーション
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        const section = e.currentTarget.dataset.section;
+                        this.switchSection(section);
+                    });
+                });
+
+                // カテゴリタブ
+                document.querySelectorAll('.category-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        this.switchCategory(e.target.dataset.category);
+                    });
+                });
+
+                // テーブル選択
+                document.getElementById('tableSelector').addEventListener('change', (e) => {
+                    this.currentTable = parseInt(e.target.value);
+                });
+            }
+
+            switchSection(section) {
+                // ナビゲーションの active クラス切り替え
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`[data-section="${section}"]`).classList.add('active');
+
+                // セクション表示切り替え
+                document.querySelectorAll('.management-section').forEach(sec => {
+                    sec.classList.remove('active');
+                });
+
+                const targetSection = document.getElementById(section + 'Section');
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
+
+                // ページタイトル更新
+                const titles = {
+                    order: '注文管理',
+                    menu: 'メニュー管理',
+                    sales: '売上分析',
+                    tables: 'テーブル管理',
+                    settings: '設定'
+                };
+                document.getElementById('pageTitle').textContent = titles[section] || section;
+
+                if (section === 'sales') {
+                    this.updateSalesStats();
+                }
+            }
+
+            switchCategory(category) {
+                this.currentCategory = category;
+                
+                // タブの active クラス切り替え
+                document.querySelectorAll('.category-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector(`[data-category="${category}"]`).classList.add('active');
+
+                this.displayMenu();
+            }
+
+            displayMenu() {
+                const menuGrid = document.getElementById('menuGrid');
+                let filteredMenu = this.currentCategory === 'all' ? 
+                    this.menu : 
+                    this.menu.filter(item => item.category === this.currentCategory);
+
+                menuGrid.innerHTML = filteredMenu.map(item => `
+                    <div class="menu-item" onclick="pos.addToOrder(${item.id})">
+                        <h4>${item.name}</h4>
+                        <div class="price">¥${item.price.toLocaleString()}</div>
+                    </div>
+                `).join('');
+
+                document.getElementById('menuItemCount').textContent = `${filteredMenu.length} 品目`;
+            }
+
+            addToOrder(itemId) {
+                const menuItem = this.menu.find(item => item.id === itemId);
+                const existingItem = this.currentOrder.find(item => item.id === itemId);
+
+                if (existingItem) {
+                    existingItem.quantity++;
+                } else {
+                    this.currentOrder.push({
+                        ...menuItem,
+                        quantity: 1
+                    });
+                }
+
+                this.updateOrderDisplay();
+            }
+
+            updateQuantity(itemId, change) {
+                const item = this.currentOrder.find(item => item.id === itemId);
+                if (item) {
+                    item.quantity += change;
+                    if (item.quantity <= 0) {
+                        this.removeFromOrder(itemId);
+                    } else {
+                        this.updateOrderDisplay();
+                    }
+                }
+            }
+
+            removeFromOrder(itemId) {
+                this.currentOrder = this.currentOrder.filter(item => item.id !== itemId);
+                this.updateOrderDisplay();
+            }
+
+            updateOrderDisplay() {
+                const orderItems = document.getElementById('orderItems');
+                
+                if (this.currentOrder.length === 0) {
+                    orderItems.innerHTML = `
+                        <div style="text-align: center; color: #7f8c8d; margin-top: 50px;">
+                            注文がありません
+                        </div>
+                    `;
+                } else {
+                    orderItems.innerHTML = this.currentOrder.map(item => `
+                        <div class="order-item">
+                            <div class="item-info">
+                                <h5>${item.name}</h5>
+                                <div class="item-price">¥${item.price.toLocaleString()} × ${item.quantity}</div>
+                            </div>
+                            <div class="item-controls">
+                                <button class="qty-btn" onclick="pos.updateQuantity(${item.id}, -1)">-</button>
+                                <span>${item.quantity}</span>
+                                <button class="qty-btn" onclick="pos.updateQuantity(${item.id}, 1)">+</button>
+                                <button class="remove-btn" onclick="pos.removeFromOrder(${item.id})">削除</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // 合計計算
+                const subtotal = this.currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const tax = Math.floor(subtotal * 0.1);
+                const total = subtotal + tax;
+
+                document.getElementById('subtotal').textContent = `¥${subtotal.toLocaleString()}`;
+                document.getElementById('tax').textContent = `¥${tax.toLocaleString()}`;
+                document.getElementById('total').textContent = `¥${total.toLocaleString()}`;
+            }
+
+            processPayment() {
+                if (this.currentOrder.length === 0) {
+                    alert('注文がありません');
+                    return;
+                }
+
+                const subtotal = this.currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const tax = Math.floor(subtotal * 0.1);
+                const total = subtotal + tax;
+
+                // 売上データに追加
+                const saleRecord = {
+                    id: Date.now(),
+                    timestamp: new Date().toISOString(),
+                    table: this.currentTable,
+                    items: [...this.currentOrder],
+                    subtotal,
+                    tax,
+                    total
+                };
+
+                this.salesData.push(saleRecord);
+                localStorage.setItem('posServices', JSON.stringify(this.salesData));
+
+                // レシート表示
+                document.getElementById('receiptTotal').textContent = `¥${total.toLocaleString()}`;
+                document.getElementById('paymentModal').classList.remove('hidden');
+
+                // 注文クリア
+                this.currentOrder = [];
+                this.updateOrderDisplay();
+            }
+
+            clearOrder() {
+                if (this.currentOrder.length > 0 && confirm('注文をクリアしますか？')) {
+                    this.currentOrder = [];
+                    this.updateOrderDisplay();
+                }
+            }
+
+            updateSalesStats() {
+                const today = new Date().toDateString();
+                const todaySales = this.salesData.filter(sale => 
+                    new Date(sale.timestamp).toDateString() === today
+                );
+
+                const todayTotal = todaySales.reduce((sum, sale) => sum + sale.total, 0);
+                const orderCount = todaySales.length;
+                const avgOrder = orderCount > 0 ? Math.floor(todayTotal / orderCount) : 0;
+
+                // 人気商品計算
+                const itemCount = {};
+                todaySales.forEach(sale => {
+                    sale.items.forEach(item => {
+                        itemCount[item.name] = (itemCount[item.name] || 0) + item.quantity;
+                    });
+                });
+
+                const popularItem = Object.keys(itemCount).length > 0 ? 
+                    Object.keys(itemCount).reduce((a, b) => itemCount[a] > itemCount[b] ? a : b) : '-';
+
+                document.getElementById('todaySales').textContent = `¥${todayTotal.toLocaleString()}`;
+                document.getElementById('orderCount').textContent = orderCount.toString();
+                document.getElementById('avgOrder').textContent = `¥${avgOrder.toLocaleString()}`;
+                document.getElementById('popularItem').textContent = popularItem;
+
+                // 売上履歴表示
+                this.updateSalesHistory();
+            }
+
+            updateSalesHistory() {
+                const salesHistory = document.getElementById('salesHistory');
+                const recentSales = this.salesData.slice(-10).reverse();
+
+                if (recentSales.length === 0) {
+                    salesHistory.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #7f8c8d;">データがありません</td>
+                        </tr>
+                    `;
+                } else {
+                    salesHistory.innerHTML = recentSales.map(sale => {
+                        const time = new Date(sale.timestamp).toLocaleTimeString('ja-JP', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        });
+                        const itemNames = sale.items.map(item => `${item.name}×${item.quantity}`).join(', ');
+                        
+                        return `
+                            <tr>
+                                <td>${time}</td>
+                                <td>テーブル ${sale.table}</td>
+                                <td>${itemNames}</td>
+                                <td>¥${sale.total.toLocaleString()}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+
+            startClock() {
+                const updateTime = () => {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString('ja-JP', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    document.getElementById('currentTime').textContent = timeString;
+                };
+                
+                updateTime();
+                setInterval(updateTime, 1000);
+            }
+        }
+
+        // グローバル関数
+        function clearOrder() {
+            pos.clearOrder();
+        }
+
+        function processPayment() {
+            pos.processPayment();
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+        }
+
+        // POSシステム初期化
+        const pos = new RestaurantPOS();
+    </script>
+</body>
+</html>
+exit 

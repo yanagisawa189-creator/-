@@ -1,0 +1,33 @@
+{
+  "name": "aio-checker",
+  "version": "0.1.0",
+  "description": "AIO (AI Overviews) display checker for Google search results",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node --esm src/index.ts",
+    "run:once": "ts-node --esm src/index.ts --run-once",
+    "start": "node dist/index.js",
+    "test": "tsx src/test.ts"
+  },
+  "bin": {
+    "aio-checker": "./dist/index.js"
+  },
+  "keywords": ["AIO", "AI Overviews", "Google", "SERP", "SEO"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^3.3.2",
+    "googleapis": "^131.0.0",
+    "@anthropic-ai/sdk": "^0.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "tsx": "^4.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.2.0"
+  }
+}

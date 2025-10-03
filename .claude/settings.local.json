@@ -1,0 +1,117 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir)",
+      "Read(/C:\\ts/**)",
+      "Bash(dir app)",
+      "Bash(dir frontend)",
+      "Read(/C:\\ts\\real-estate-app/**)",
+      "Read(/C:\\ts/**)",
+      "Bash(python:*)",
+      "Bash(npm run dev:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_fill_form",
+      "Bash(taskkill:*)",
+      "Bash(npm start)",
+      "Bash(dir:*)",
+      "Bash(npm install)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(pip install:*)",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_file_upload",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(cmd /c:*)",
+      "Bash(deploy.bat)",
+      "Bash(docker:*)",
+      "Bash(npm:*)",
+      "Bash(xcopy:*)",
+      "Bash(robocopy:*)",
+      "Bash(curl:*)",
+      "Read(//c//**)",
+      "Bash(start C:tssales-list-manager.html)",
+      "Bash(start \"C:\\ts\\sales-list-manager.html\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "Bash(ssh:*)",
+      "Bash(start \"C:\\ts\\aio-checker-dashboard.html\")",
+      "Bash(rm:*)",
+      "Bash(start \"C:\\ts\\aio-checker-dashboard-v2.html\")",
+      "Bash(git config:*)",
+      "Bash(git remote add:*)",
+      "Bash(git pull:*)",
+      "Bash(node:*)",
+      "Bash(start \"C:\\ts\\aio-checker-pro\\aio-checker-dashboard-integrated.html\")",
+      "Bash(git rm:*)",
+      "Bash(git stash:*)",
+      "Bash(start http://localhost:3000)",
+      "Bash(start https://serpapi.com)",
+      "WebFetch(domain:serpapi.com)",
+      "Bash(start:*)"
+    ]
+  },
+  "database": {
+    "sqlite_url": "sqlite:///./property_listings.db"
+  },
+  "api": {
+    "host": "localhost",
+    "port": 8000,
+    "debug": true
+  },
+  "storage": {
+    "image_paths": {
+      "original": "./storage/images/original",
+      "suumo": "./storage/images/suumo",
+      "homes": "./storage/images/homes",
+      "instagram": "./storage/images/instagram",
+      "flyer": "./storage/images/flyer"
+    }
+  },
+  "export": {
+    "output_dir": "./storage/exports",
+    "csv_encoding": "utf-8"
+  },
+  "image_sizes": {
+    "suumo": {
+      "width": 760,
+      "height": 570
+    },
+    "homes": {
+      "width": 720,
+      "height": 540
+    },
+    "instagram": {
+      "width": 1080,
+      "height": 1080
+    },
+    "flyer": {
+      "dpi": 300,
+      "format": "A4"
+    }
+  },
+  "copy_limits": {
+    "suumo": {
+      "min_length": 250,
+      "max_length": 300
+    },
+    "homes": {
+      "max_blocks": 3,
+      "chars_per_block": 200
+    },
+    "instagram": {
+      "min_length": 280,
+      "max_length": 350,
+      "hashtag_count": 10
+    },
+    "flyer": {
+      "headline_max": 20,
+      "subheadline_max": 40,
+      "bullet_points": 5
+    }
+  }
+}

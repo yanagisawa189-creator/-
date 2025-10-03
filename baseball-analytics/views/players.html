@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>選手成績</title>
+    <link rel="stylesheet" href="../public/css/styles.css">
+</head>
+<body>
+    <header>
+        <h1>選手成績</h1>
+    </header>
+    <main>
+        <div class="controls">
+            <div class="filter-group">
+                <label for="positionFilter">ポジション:</label>
+                <select id="positionFilter">
+                    <option value="all">全て</option>
+                    <option value="pitcher">投手</option>
+                    <option value="catcher">捕手</option>
+                    <option value="infield">内野手</option>
+                    <option value="outfield">外野手</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="sortBy">ソート:</label>
+                <select id="sortBy">
+                    <option value="avg">打率</option>
+                    <option value="hr">本塁打</option>
+                    <option value="rbi">打点</option>
+                    <option value="era">防御率</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="updatePlayerStats()">更新</button>
+        </div>
+
+        <div class="players-grid" id="playersGrid">
+            <!-- 選手カードがここに表示されます -->
+        </div>
+    </main>
+    <script src="../public/js/main.js"></script>
+</body>
+</html>
