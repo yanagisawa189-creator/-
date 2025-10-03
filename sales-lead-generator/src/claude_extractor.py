@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 class ClaudeExtractor:
     def __init__(self):
-        self.client = AsyncAnthropic(api_key=config.claude.api_key)
+        self.api_key = config.claude.api_key
+        self.client = AsyncAnthropic(api_key=self.api_key) if self.api_key else None
         self.extraction_schema = {
             "type": "object",
             "properties": {
@@ -55,6 +56,11 @@ class ClaudeExtractor:
         """
         複数のスクレイピングデータから会社情報を一括抽出
         """
+        # Claude APIキーがない場合はスクレイピングデータから基本情報のみ抽出
+        if not self.client:
+            logger.warning("Claude API key not configured - using basic extraction from scraped data")
+            return self._extract_from_scraped_data_only(scraped_data)
+
         semaphore = asyncio.Semaphore(5)  # Claude APIの同時リクエスト数制限
         tasks = []
 
@@ -71,6 +77,31 @@ class ClaudeExtractor:
                 continue
             if result:
                 company_infos.append(result)
+
+        return company_infos
+
+    def _extract_from_scraped_data_only(self, scraped_data: List[Dict[str, str]]) -> List[CompanyInfo]:
+        """
+        Claude APIなしでスクレイピングデータから基本情報のみを抽出
+        """
+        company_infos = []
+        for data in scraped_data:
+            try:
+                company_info = CompanyInfo(
+                    company_name=data.get('title', 'Unknown'),
+                    url=data.get('url', ''),
+                    industry='',
+                    location='',
+                    description=data.get('description', '')[:200] if data.get('description') else '',
+                    business_size=BusinessSize.SMALL,
+                    contact_email=data.get('emails', [''])[0] if data.get('emails') else '',
+                    phone='',
+                    additional_emails=data.get('emails', []),
+                    social_media={}
+                )
+                company_infos.append(company_info)
+            except Exception as e:
+                logger.error(f"Error creating company info from {data.get('url', 'unknown')}: {e}")
 
         return company_infos
 

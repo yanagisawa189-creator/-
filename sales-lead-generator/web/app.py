@@ -37,6 +37,12 @@ app = Flask(__name__)
 app.secret_key = 'sales-lead-generator-secret-key'  # 本番環境では変更してください
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
+# カスタムJinjaフィルター
+@app.template_filter('tojsonfilter')
+def tojson_filter(obj):
+    """オブジェクトをJSON文字列に変換"""
+    return json.dumps(obj, ensure_ascii=False, default=str)
+
 # グローバル変数
 current_job = None
 job_results = {}
