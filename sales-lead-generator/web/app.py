@@ -118,7 +118,8 @@ class WebJobManager:
                 socketio.emit('job_completed', {
                     'job_id': job_id,
                     'result': result
-                })
+                }, namespace='/', broadcast=True)
+                logger.info(f"Emitted job_completed for {job_id}")
             else:
                 self.job_status[job_id].update({
                     'status': 'error',
@@ -130,7 +131,8 @@ class WebJobManager:
                 socketio.emit('job_error', {
                     'job_id': job_id,
                     'error': result.get('error', '不明なエラー')
-                })
+                }, namespace='/', broadcast=True)
+                logger.info(f"Emitted job_error for {job_id}")
 
         except Exception as e:
             logger.error(f"Job {job_id} failed: {e}", exc_info=True)
@@ -144,7 +146,8 @@ class WebJobManager:
             socketio.emit('job_error', {
                 'job_id': job_id,
                 'error': str(e)
-            })
+            }, namespace='/', broadcast=True)
+            logger.info(f"Emitted job_error (exception) for {job_id}")
 
     def _emit_progress(self, job_id, progress, message):
         """進行状況をWebSocketで送信"""
@@ -157,7 +160,8 @@ class WebJobManager:
             'job_id': job_id,
             'progress': progress,
             'message': message
-        })
+        }, namespace='/', broadcast=True)
+        logger.info(f"Emitted progress: {job_id} - {progress}% - {message}")
 
     def get_job_status(self, job_id):
         """ジョブの状態を取得"""
@@ -201,7 +205,7 @@ def api_search():
             'industry': data.get('industry'),
             'location': data.get('location'),
             'keywords': data.get('keywords', []),
-            'max_results': min(data.get('max_results', 20), 100),  # 最大100件に制限
+            'max_results': min(data.get('max_results', 50), 200),  # 最大200件に制限（デフォルト50件）
             'wordpress_only': data.get('wordpress_only', False)
         }
 
