@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIO表示チェッカー - システム全体図</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #1e3a8a;
+            font-size: 42px;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #1e3a8a;
+        }
+
+        .tab:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .architecture-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .architecture-title {
+            font-size: 32px;
+            color: #1e3a8a;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .layer {
+            margin-bottom: 40px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .layer-header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
+            color: white;
+            padding: 20px 30px;
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .layer-header.frontend {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .layer-header.backend {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .layer-header.data {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        }
+
+        .layer-header.api {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .layer-content {
+            padding: 30px;
+            background: #f8fafc;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .component-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 5px solid #3b82f6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .component-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .component-card.frontend {
+            border-left-color: #10b981;
+        }
+
+        .component-card.backend {
+            border-left-color: #f59e0b;
+        }
+
+        .component-card.data {
+            border-left-color: #8b5cf6;
+        }
+
+        .component-card.api {
+            border-left-color: #ef4444;
+        }
+
+        .component-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .component-desc {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .component-tech {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tech-badge {
+            padding: 5px 12px;
+            background: #e0e7ff;
+            color: #3730a3;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .flow-diagram {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-top: 30px;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border-left: 5px solid #3b82f6;
+        }
+
+        .flow-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .flow-content h3 {
+            color: #1e293b;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .flow-content p {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .code-title {
+            color: #10b981;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .file-tree {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .file-tree-item {
+            padding: 8px 0;
+            color: #1e293b;
+        }
+
+        .file-tree-item.folder {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .file-tree-item.file {
+            color: #64748b;
+            margin-left: 20px;
+        }
+
+        .screenshot-container {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+        }
+
+        .screenshot-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .screenshot-card h3 {
+            color: #1e293b;
+            font-size: 20px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .screenshot-placeholder {
+            background: linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%);
+            border-radius: 12px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4c1d95;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .link-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .link-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .components-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .screenshot-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ AIO表示チェッカー - システム全体図</h1>
+            <p>フロントエンドからバックエンドまでの完全な技術アーキテクチャ</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">📊 システム概要</button>
+            <button class="tab" onclick="showTab('frontend')">🎨 フロントエンド</button>
+            <button class="tab" onclick="showTab('backend')">⚙️ バックエンド</button>
+            <button class="tab" onclick="showTab('flow')">🔄 処理フロー</button>
+            <button class="tab" onclick="showTab('files')">📁 ファイル構成</button>
+        </div>
+
+        <!-- システム概要 -->
+        <div id="overview" class="content-section active">
+            <div class="architecture-container">
+                <h2 class="architecture-title">システムアーキテクチャ全体図</h2>
+
+                <!-- フロントエンド層 -->
+                <div class="layer">
+                    <div class="layer-header frontend">
+                        <span>🎨</span>
+                        <span>フロントエンド層（Presentation Layer）</span>
+                    </div>
+                    <div class="layer-content">
+                        <div class="components-grid">
+                            <div class="component-card frontend">
+                                <div class="component-title">
+                                    <span>📊</span>
+                                    <span>ダッシュボード v3</span>
+                                </div>
+                                <div class="component-desc">
+                                    AIO検索結果、LLM引用状況、統計グラフを可視化する総合ダッシュボード。
+                                    JSON結果をアップロードして分析可能。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">HTML5</span>
+                                    <span class="tech-badge">JavaScript ES6</span>
+                                    <span class="tech-badge">Chart.js</span>
+                                    <span class="tech-badge">CSS3</span>
+                                </div>
+                            </div>
+
+                            <div class="component-card frontend">
+                                <div class="component-title">
+                                    <span>📈</span>
+                                    <span>統計グラフ</span>
+                                </div>
+                                <div class="component-desc">
+                                    AIO表示状況、LLM引用率、デバイス別分布、検索エンジン別分布を
+                                    円グラフ・棒グラフで表示。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">Chart.js 4.x</span>
+                                    <span class="tech-badge">Canvas API</span>
+                                </div>
+                            </div>
+
+                            <div class="component-card frontend">
+                                <div class="component-title">
+                                    <span>💾</span>
+                                    <span>データ出力</span>
+                                </div>
+                                <div class="component-desc">
+                                    分析結果をCSV形式でエクスポート。Excel等で二次分析可能。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">Blob API</span>
+                                    <span class="tech-badge">CSV</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- バックエンド層 -->
+                <div class="layer">
+                    <div class="layer-header backend">
+                        <span>⚙️</span>
+                        <span>バックエンド層（Application Layer）</span>
+                    </div>
+                    <div class="layer-content">
+                        <div class="components-grid">
+                            <div class="component-card backend">
+                                <div class="component-title">
+                                    <span>🎯</span>
+                                    <span>メインコントローラ</span>
+                                </div>
+                                <div class="component-desc">
+                                    キーワードごとの検索実行、AIO分析、LLMチェックを統括。
+                                    複数プロバイダーを並列実行して効率化。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">TypeScript</span>
+                                    <span class="tech-badge">Node.js</span>
+                                    <span class="tech-badge">Async/Await</span>
+                                </div>
+                            </div>
+
+                            <div class="component-card backend">
+                                <div class="component-title">
+                                    <span>🔍</span>
+                                    <span>SERP検索プロバイダー</span>
+                                </div>
+                                <div class="component-desc">
+                                    Google（SerpAPI経由）とYahoo!の検索結果取得。
+                                    PC/モバイル対応、上位100件取得、AI Overview抽出。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">SerpAPI</span>
+                                    <span class="tech-badge">REST API</span>
+                                    <span class="tech-badge">Puppeteer</span>
+                                </div>
+                            </div>
+
+                            <div class="component-card backend">
+                                <div class="component-title">
+                                    <span>🤖</span>
+                                    <span>LLMプロバイダー x3</span>
+                                </div>
+                                <div class="component-desc">
+                                    Claude Web Search、ChatGPT Web Search、Gemini Groundingの
+                                    3つのLLMで引用チェック。自社ドメインマッチング機能付き。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">Anthropic API</span>
+                                    <span class="tech-badge">OpenAI API</span>
+                                    <span class="tech-badge">Google AI API</span>
+                                </div>
+                            </div>
+
+                            <div class="component-card backend">
+                                <div class="component-title">
+                                    <span>📊</span>
+                                    <span>AIO分析サービス</span>
+                                </div>
+                                <div class="component-desc">
+                                    検索結果からAI Overview情報を抽出。引用元URL、
+                                    自社ドメイン判定、順位計算を実行。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">TypeScript</span>
+                                    <span class="tech-badge">正規表現</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- データ層 -->
+                <div class="layer">
+                    <div class="layer-header data">
+                        <span>💾</span>
+                        <span>データ層（Data Layer）</span>
+                    </div>
+                    <div class="layer-content">
+                        <div class="components-grid">
+                            <div class="component-card data">
+                                <div class="component-title">
+                                    <span>📋</span>
+                                    <span>Google Sheets連携</span>
+                                </div>
+                                <div class="component-desc">
+                                    キーワード設定の読み込み、結果の書き込み。
+                                    複数チームでの共有に対応。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">Google Sheets API</span>
+                                    <span class="tech-badge">Service Account</span>
+                                </div>
+                            </div>
+
+                            <div class="component-card data">
+                                <div class="component-title">
+                                    <span>📄</span>
+                                    <span>ローカルストレージ</span>
+                                </div>
+                                <div class="component-desc">
+                                    日付別フォルダでJSON結果を保存。
+                                    タイムスタンプ付きでバージョン管理可能。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">JSON</span>
+                                    <span class="tech-badge">File System</span>
+                                </div>
+                            </div>
+
+                            <div class="component-card data">
+                                <div class="component-title">
+                                    <span>⚙️</span>
+                                    <span>設定管理</span>
+                                </div>
+                                <div class="component-desc">
+                                    環境変数（.env）でAPIキー、ターゲットドメイン、
+                                    出力先などを一元管理。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">dotenv</span>
+                                    <span class="tech-badge">.env</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 外部API層 -->
+                <div class="layer">
+                    <div class="layer-header api">
+                        <span>🌐</span>
+                        <span>外部API層（External Services）</span>
+                    </div>
+                    <div class="layer-content">
+                        <div class="components-grid">
+                            <div class="component-card api">
+                                <div class="component-title">
+                                    <span>🔍</span>
+                                    <span>SerpAPI</span>
+                                </div>
+                                <div class="component-desc">
+                                    Google検索結果を取得。AI Overview、オーガニック結果、
+                                    ランキング情報を提供。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">REST API</span>
+                                    <span class="tech-badge">JSON</span>
+                                </div>
+                            </div>
+
+                            <div class="component-card api">
+                                <div class="component-title">
+                                    <span>🧠</span>
+                                    <span>Anthropic Claude API</span>
+                                </div>
+                                <div class="component-desc">
+                                    Claude 3.5でWeb検索を実行。引用元URLを含む
+                                    AI回答を生成。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">Claude 3.5</span>
+                                    <span class="tech-badge">Web Search</span>
+                                </div>
+                            </div>
+
+                            <div class="component-card api">
+                                <div class="component-title">
+                                    <span>💬</span>
+                                    <span>OpenAI ChatGPT API</span>
+                                </div>
+                                <div class="component-desc">
+                                    GPT-4oでWeb検索ツールを使用。最新情報を含む
+                                    回答と引用を取得。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">GPT-4o</span>
+                                    <span class="tech-badge">Web Search Tool</span>
+                                </div>
+                            </div>
+
+                            <div class="component-card api">
+                                <div class="component-title">
+                                    <span>✨</span>
+                                    <span>Google AI Gemini API</span>
+                                </div>
+                                <div class="component-desc">
+                                    Gemini ProでGrounding機能を使用。Google検索と
+                                    統合した回答を生成。
+                                </div>
+                                <div class="component-tech">
+                                    <span class="tech-badge">Gemini Pro</span>
+                                    <span class="tech-badge">Grounding</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- フロントエンド詳細 -->
+        <div id="frontend" class="content-section">
+            <div class="architecture-container">
+                <h2 class="architecture-title">🎨 フロントエンド詳細</h2>
+
+                <div class="component-card frontend" style="margin-bottom: 30px;">
+                    <div class="component-title">
+                        <span>📊</span>
+                        <span>ダッシュボード v3 - 機能一覧</span>
+                    </div>
+                    <div class="component-desc">
+                        <ul style="margin-left: 20px; line-height: 2;">
+                            <li><strong>データ読み込み:</strong> JSON結果ファイルをドラッグ&ドロップまたは選択</li>
+                            <li><strong>統計サマリ:</strong> 総キーワード数、AIO表示数、自社引用数、LLM引用率</li>
+                            <li><strong>グラフ表示:</strong> AIO状況、LLM別引用、デバイス分布、検索エンジン分布</li>
+                            <li><strong>詳細結果:</strong> キーワードごとの検索順位、AIO表示、LLM引用を一覧表示</li>
+                            <li><strong>LLMカード:</strong> Claude/ChatGPT/Gemini別に回答・引用状況を表示</li>
+                            <li><strong>CSV出力:</strong> 全データをExcel形式でエクスポート</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="screenshot-container">
+                    <div class="screenshot-card">
+                        <h3>📊 メインダッシュボード</h3>
+                        <div class="screenshot-placeholder">
+                            統計カード × 4<br>
+                            （キーワード数、AIO、引用数、LLM率）
+                        </div>
+                        <a href="file:///C:/ts/aio-checker-dashboard-v3.html" class="link-button" target="_blank">
+                            ダッシュボードを開く →
+                        </a>
+                    </div>
+
+                    <div class="screenshot-card">
+                        <h3>📈 統計グラフ</h3>
+                        <div class="screenshot-placeholder">
+                            円グラフ × 2<br>
+                            棒グラフ × 2<br>
+                            （Chart.js使用）
+                        </div>
+                    </div>
+
+                    <div class="screenshot-card">
+                        <h3>🤖 LLM引用カード</h3>
+                        <div class="screenshot-placeholder">
+                            Claude / ChatGPT / Gemini<br>
+                            各引用元URL表示<br>
+                            回答抜粋表示
+                        </div>
+                    </div>
+
+                    <div class="screenshot-card">
+                        <h3>💾 CSV出力</h3>
+                        <div class="screenshot-placeholder">
+                            全データをCSV形式で<br>
+                            エクスポート<br>
+                            （Excel対応）
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-title">フロントエンド主要コード例（データ読み込み）</div>
+                    <pre>
+function loadResults(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const data = JSON.parse(e.target.result);
+        currentData = Array.isArray(data) ? data : [data];
+
+        displayResults(currentData);
+        displayStats(currentData);
+        displayCharts(currentData);
+    };
+
+    reader.readAsText(file);
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- バックエンド詳細 -->
+        <div id="backend" class="content-section">
+            <div class="architecture-container">
+                <h2 class="architecture-title">⚙️ バックエンド詳細</h2>
+
+                <div class="component-card backend" style="margin-bottom: 30px;">
+                    <div class="component-title">
+                        <span>🏗️</span>
+                        <span>コアアーキテクチャ</span>
+                    </div>
+                    <div class="component-desc">
+                        <ul style="margin-left: 20px; line-height: 2;">
+                            <li><strong>言語:</strong> TypeScript 5.x（完全型安全）</li>
+                            <li><strong>ランタイム:</strong> Node.js 18+</li>
+                            <li><strong>ビルドツール:</strong> tsc（TypeScript Compiler）</li>
+                            <li><strong>モジュール:</strong> ES Modules（import/export）</li>
+                            <li><strong>設計パターン:</strong> Provider Pattern、Service Pattern</li>
+                            <li><strong>エラーハンドリング:</strong> Try-Catch、指数バックオフリトライ</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="components-grid" style="margin-bottom: 30px;">
+                    <div class="component-card backend">
+                        <div class="component-title">📁 index.ts</div>
+                        <div class="component-desc">
+                            <strong>メインエントリーポイント</strong><br>
+                            ・プロバイダー初期化<br>
+                            ・キーワードループ処理<br>
+                            ・結果集約と保存<br>
+                            ・エラーハンドリング
+                        </div>
+                    </div>
+
+                    <div class="component-card backend">
+                        <div class="component-title">⚙️ config.ts</div>
+                        <div class="component-desc">
+                            <strong>設定管理</strong><br>
+                            ・環境変数読み込み<br>
+                            ・APIキー管理<br>
+                            ・ログ機能<br>
+                            ・バリデーション
+                        </div>
+                    </div>
+
+                    <div class="component-card backend">
+                        <div class="component-title">🔍 google-serpapi.ts</div>
+                        <div class="component-desc">
+                            <strong>Google検索</strong><br>
+                            ・SerpAPI連携<br>
+                            ・AI Overview抽出<br>
+                            ・上位100件取得<br>
+                            ・デバイス切替
+                        </div>
+                    </div>
+
+                    <div class="component-card backend">
+                        <div class="component-title">🔍 yahoo.ts</div>
+                        <div class="component-desc">
+                            <strong>Yahoo!検索</strong><br>
+                            ・スクレイピング<br>
+                            ・順位取得<br>
+                            ・PC/モバイル対応<br>
+                            ・（現在モック実装）
+                        </div>
+                    </div>
+
+                    <div class="component-card backend">
+                        <div class="component-title">🤖 claude.ts</div>
+                        <div class="component-desc">
+                            <strong>Claude Web Search</strong><br>
+                            ・Anthropic API<br>
+                            ・引用URL抽出<br>
+                            ・ドメインマッチング<br>
+                            ・モックフォールバック
+                        </div>
+                    </div>
+
+                    <div class="component-card backend">
+                        <div class="component-title">🤖 chatgpt.ts</div>
+                        <div class="component-desc">
+                            <strong>ChatGPT Web Search</strong><br>
+                            ・OpenAI API<br>
+                            ・Web Searchツール<br>
+                            ・引用URL抽出<br>
+                            ・モックフォールバック
+                        </div>
+                    </div>
+
+                    <div class="component-card backend">
+                        <div class="component-title">🤖 gemini.ts</div>
+                        <div class="component-desc">
+                            <strong>Gemini Grounding</strong><br>
+                            ・Google AI API<br>
+                            ・Grounding機能<br>
+                            ・引用メタデータ抽出<br>
+                            ・モックフォールバック
+                        </div>
+                    </div>
+
+                    <div class="component-card backend">
+                        <div class="component-title">📊 aio.ts</div>
+                        <div class="component-desc">
+                            <strong>AIO分析サービス</strong><br>
+                            ・AI Overview検出<br>
+                            ・引用元抽出<br>
+                            ・自社ドメイン判定<br>
+                            ・順位計算
+                        </div>
+                    </div>
+
+                    <div class="component-card backend">
+                        <div class="component-title">📋 sheets.ts</div>
+                        <div class="component-desc">
+                            <strong>Sheets連携</strong><br>
+                            ・設定読み込み<br>
+                            ・結果書き込み<br>
+                            ・ヘッダー管理<br>
+                            ・モック対応
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-title">バックエンド主要コード例（LLM並列実行）</div>
+                    <pre>
+// LLM Citation Checks (Google only)
+const llmResults: any[] = [];
+
+if (engine === 'google') {
+  // Claude Web Search
+  if (claudeProvider && claudeProvider.isEnabled()) {
+    const claudeResult = await claudeProvider.checkCitations({
+      keyword: config.keyword,
+      lang: config.lang,
+    });
+    if (claudeResult) {
+      llmResults.push({ ...claudeResult });
+    }
+  }
+
+  // ChatGPT Web Search
+  if (chatgptProvider && chatgptProvider.isEnabled()) {
+    const chatgptResult = await chatgptProvider.checkCitations({
+      keyword: config.keyword,
+      lang: config.lang,
+    });
+    if (chatgptResult) {
+      llmResults.push({ ...chatgptResult });
+    }
+  }
+
+  // Gemini Grounding
+  if (geminiProvider && geminiProvider.isEnabled()) {
+    const geminiResult = await geminiProvider.checkCitations({
+      keyword: config.keyword,
+      lang: config.lang,
+    });
+    if (geminiResult) {
+      llmResults.push({ ...geminiResult });
+    }
+  }
+
+  // Store all LLM results
+  result.llm_results = llmResults;
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 処理フロー -->
+        <div id="flow" class="content-section">
+            <div class="architecture-container">
+                <h2 class="architecture-title">🔄 処理フロー詳細</h2>
+
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <div class="flow-number">1</div>
+                        <div class="flow-content">
+                            <h3>起動・初期化</h3>
+                            <p>環境変数読み込み → 設定バリデーション → プロバイダー初期化（Google, Yahoo, Claude, ChatGPT, Gemini）→ Google Sheets接続確認</p>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">2</div>
+                        <div class="flow-content">
+                            <h3>キーワード設定読み込み</h3>
+                            <p>Google Sheetsまたはモックデータからキーワード設定を取得。各キーワードの言語、デバイス、地域、ターゲットドメインを読み込み。</p>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">3</div>
+                        <div class="flow-content">
+                            <h3>Google検索実行</h3>
+                            <p>SerpAPI経由でGoogle検索 → AI Overview抽出 → オーガニック結果（上位100件）取得 → 自社ドメイン順位計算</p>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">4</div>
+                        <div class="flow-content">
+                            <h3>AIO分析</h3>
+                            <p>AI Overview情報から引用元URL抽出 → ドメイン正規化 → 自社ドメインマッチング → 引用有無判定</p>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">5</div>
+                        <div class="flow-content">
+                            <h3>LLM引用チェック（並列実行）</h3>
+                            <p>
+                                <strong>Claude:</strong> Anthropic API → Web Search実行 → 引用URL抽出<br>
+                                <strong>ChatGPT:</strong> OpenAI API → Web Searchツール → 引用URL抽出<br>
+                                <strong>Gemini:</strong> Google AI API → Grounding → 引用メタデータ抽出
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">6</div>
+                        <div class="flow-content">
+                            <h3>Yahoo!検索実行</h3>
+                            <p>Yahoo!検索API/スクレイピング → オーガニック結果取得 → 自社ドメイン順位計算（現在はモック実装）</p>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">7</div>
+                        <div class="flow-content">
+                            <h3>結果集約</h3>
+                            <p>Google結果 + LLM結果 + Yahoo結果を1つのオブジェクトに統合 → DailyResult型で構造化</p>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">8</div>
+                        <div class="flow-content">
+                            <h3>結果保存</h3>
+                            <p>
+                                <strong>Google Sheets:</strong> 結果を追記保存<br>
+                                <strong>ローカル:</strong> 日付別フォルダにJSON保存（例: ./runs/2025-10-08/results_2025-10-08T12-30-45.json）
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="flow-number">9</div>
+                        <div class="flow-content">
+                            <h3>ダッシュボード表示</h3>
+                            <p>保存されたJSONファイルをダッシュボードv3で読み込み → 統計計算 → グラフ描画 → 詳細結果表示</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ファイル構成 -->
+        <div id="files" class="content-section">
+            <div class="architecture-container">
+                <h2 class="architecture-title">📁 ファイル構成</h2>
+
+                <div class="file-tree">
+<pre>
+aio-checker/
+├── src/
+│   ├── index.ts                    # メインエントリーポイント
+│   ├── config.ts                   # 設定管理・環境変数
+│   ├── types/
+│   │   └── core.ts                 # 型定義（KeywordConfig, DailyResult等）
+│   ├── providers/
+│   │   ├── serp/
+│   │   │   ├── google-serpapi.ts   # Google検索プロバイダー
+│   │   │   └── yahoo.ts            # Yahoo!検索プロバイダー
+│   │   └── llm/
+│   │       ├── claude.ts           # Claude Web Searchプロバイダー
+│   │       ├── chatgpt.ts          # ChatGPT Web Searchプロバイダー
+│   │       └── gemini.ts           # Gemini Groundingプロバイダー
+│   └── services/
+│       ├── aio.ts                  # AIO分析サービス
+│       └── sheets.ts               # Google Sheets連携サービス
+│
+├── dist/                           # ビルド済みJSファイル
+├── runs/                           # 実行結果（日付別フォルダ）
+│   └── 2025-10-08/
+│       └── results_*.json
+│
+├── .env                            # 環境変数設定
+├── .env.example                    # 環境変数サンプル
+├── package.json                    # npm設定
+├── tsconfig.json                   # TypeScript設定
+└── README.md                       # ドキュメント
+
+フロントエンド:
+├── aio-checker-dashboard-v3.html   # メインダッシュボード（最新版）
+├── aio-checker-dashboard-v2.html   # エンタープライズ版
+├── aio-checker-dashboard.html      # シンプル版
+├── aio-agent-dashboard.html        # エージェントサービス説明
+└── aio-system-overview.html        # このファイル（システム全体図）
+</pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-title">package.json 主要スクリプト</div>
+                    <pre>
+{
+  "name": "aio-checker",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.x",
+    "googleapis": "^128.x"
+  },
+  "devDependencies": {
+    "@types/node": "^20.x",
+    "typescript": "^5.x",
+    "tsx": "^4.x"
+  }
+}</pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-title">.env.example（環境変数設定例）</div>
+                    <pre>
+# SerpAPI Configuration (必須)
+SERPAPI_API_KEY=your_serpapi_key_here
+
+# LLM API Keys (すべてオプション)
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+GOOGLE_AI_API_KEY=your_google_ai_api_key_here
+
+# Google Sheets Configuration
+SHEET_ID=your_google_spreadsheet_id_here
+GOOGLE_CREDENTIALS_PATH=./path/to/service-account.json
+
+# Target domains for checking (カンマ区切り)
+TARGET_DOMAINS=example.com,your-domain.com
+
+# Output settings
+OUTPUT_DIR=./runs
+SCREENSHOT_DIR=./screenshots
+
+# Retry settings
+MAX_RETRY_ATTEMPTS=3
+RETRY_DELAY_MS=1000
+
+# Debug settings
+DEBUG=true
+
+# Execution mode
+RUN_ONCE=false</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all content sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

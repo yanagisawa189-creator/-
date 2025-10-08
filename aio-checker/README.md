@@ -5,9 +5,12 @@ Google検索結果のAI Overviews（AIO）表示監視ツール。自社ドメ�
 ## 機能
 
 - ✅ Google検索のAI Overviews表示チェック
+- ✅ Yahoo!検索の順位チェック
+- ✅ PC・スマホ両対応のデバイス別検索
 - ✅ AIO参照ソースの抽出
 - ✅ 自社ドメインの参照有無判定
 - ✅ 検索順位（1-100位）の取得
+- ✅ LLM引用チェック（Claude Web Search、ChatGPT Web Search、Gemini Grounding）
 - ✅ 指数バックオフによるリトライ機能
 - ✅ 詳細ログとデバッグ機能
 - ✅ JSON形式での結果保存
@@ -22,11 +25,20 @@ npm install
 ```
 
 ### 2. 環境変数の設定
-`.env`ファイルを作成し、SerpAPIキーを設定：
+`.env`ファイルを作成し、必要なAPIキーを設定：
 
 ```env
-# SerpAPI Configuration
+# SerpAPI Configuration (必須)
 SERPAPI_API_KEY=your_actual_serpapi_key_here
+
+# LLM API Keys (すべてオプション)
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+GOOGLE_AI_API_KEY=your_google_ai_api_key_here
+
+# Google Sheets Configuration (オプション)
+SHEET_ID=your_google_spreadsheet_id_here
+GOOGLE_CREDENTIALS_PATH=./path/to/service-account.json
 
 # Target domains for checking (comma-separated)
 TARGET_DOMAINS=your-domain.com,another-domain.com
@@ -38,6 +50,12 @@ SCREENSHOT_DIR=./screenshots
 # Debug
 DEBUG=true
 ```
+
+**LLM API Keyについて:**
+- `ANTHROPIC_API_KEY`: Claude Web Search機能を使用する場合に必要
+- `OPENAI_API_KEY`: ChatGPT Web Search機能を使用する場合に必要
+- `GOOGLE_AI_API_KEY`: Gemini Grounding機能を使用する場合に必要
+- これらのキーが設定されていない場合、該当のLLMチェックはスキップされます
 
 ### 3. ビルド
 ```bash
@@ -125,6 +143,9 @@ npx tsx src/index.ts check \
 - **TypeScript**: 型安全性とメンテナンス性
 - **Node.js**: ランタイム環境
 - **SerpAPI**: Google検索結果API
+- **Anthropic Claude API**: Claude Web Search機能
+- **OpenAI API**: ChatGPT Web Search機能
+- **Google AI Gemini API**: Gemini Grounding機能
 - **Commander.js**: CLI インターフェース
 - **dotenv**: 環境変数管理
 

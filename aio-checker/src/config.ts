@@ -8,6 +8,8 @@ export const appConfig = {
   spreadsheetId: process.env.SHEET_ID || '',
   googleCredentialsPath: process.env.GOOGLE_CREDENTIALS_PATH || '',
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
+  openaiApiKey: process.env.OPENAI_API_KEY || '',
+  googleAiApiKey: process.env.GOOGLE_AI_API_KEY || '',
   targetDomains: process.env.TARGET_DOMAINS?.split(',').map(d => d.trim()) || [],
   outputDir: process.env.OUTPUT_DIR || './runs',
   screenshotDir: process.env.SCREENSHOT_DIR || './screenshots',
@@ -35,6 +37,14 @@ export function validateConfig(): void {
 
   if (!appConfig.anthropicApiKey) {
     warnings.push('ANTHROPIC_API_KEY not provided - Claude Web Search will be skipped');
+  }
+
+  if (!appConfig.openaiApiKey) {
+    warnings.push('OPENAI_API_KEY not provided - ChatGPT Web Search will be skipped');
+  }
+
+  if (!appConfig.googleAiApiKey) {
+    warnings.push('GOOGLE_AI_API_KEY not provided - Gemini Grounding will be skipped');
   }
 
   if (appConfig.targetDomains.length === 0) {

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIOエージェント - サービス案内ダッシュボード</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Yu Gothic', 'Hiragino Sans', sans-serif;
+            background: linear-gradient(135deg, #5a7d7c 0%, #8ab8a3 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 1.2rem;
+            color: #5a7d7c;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #5a7d7c, #8ab8a3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .company {
+            color: #5a7d7c;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-left: 5px solid #5a7d7c;
+            padding-left: 15px;
+        }
+
+        .section h3 {
+            color: #5a7d7c;
+            margin: 20px 0 15px 0;
+            font-size: 1.3rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f7f9f9 0%, #e8f4f1 100%);
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 4px solid #5a7d7c;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(90, 125, 124, 0.2);
+        }
+
+        .feature-card h4 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .pricing-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .pricing-table thead {
+            background: linear-gradient(135deg, #5a7d7c 0%, #8ab8a3 100%);
+            color: white;
+        }
+
+        .pricing-table th,
+        .pricing-table td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .pricing-table tbody tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .pricing-table tbody tr:hover {
+            background: #e8f4f1;
+        }
+
+        .price-highlight {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #5a7d7c;
+        }
+
+        .check-icon {
+            color: #48bb78;
+            font-size: 1.2rem;
+        }
+
+        .cross-icon {
+            color: #e53e3e;
+            font-size: 1.2rem;
+        }
+
+        .keyword-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .keyword-table th,
+        .keyword-table td {
+            padding: 12px 8px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+        }
+
+        .keyword-table thead {
+            background: #5a7d7c;
+            color: white;
+        }
+
+        .keyword-table tbody tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .keyword-table tbody tr:hover {
+            background: #e8f4f1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #5a7d7c 0%, #8ab8a3 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(90, 125, 124, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+            margin-top: 20px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #5a7d7c;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7f9f9;
+            border-radius: 8px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -34px;
+            top: 20px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #5a7d7c;
+            border: 3px solid white;
+        }
+
+        .timeline-item h4 {
+            color: #5a7d7c;
+            margin-bottom: 10px;
+        }
+
+        .timeline-item .period {
+            display: inline-block;
+            background: #5a7d7c;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .contact-info {
+            background: linear-gradient(135deg, #f7f9f9 0%, #e8f4f1 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .contact-info h4 {
+            color: #5a7d7c;
+            margin-bottom: 15px;
+        }
+
+        .contact-info p {
+            margin: 5px 0;
+            color: #2d3748;
+        }
+
+        .contact-info a {
+            color: #5a7d7c;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        .alert-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .alert-box strong {
+            color: #856404;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .success-box strong {
+            color: #155724;
+        }
+
+        .tab-container {
+            margin-top: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1rem;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #5a7d7c;
+            border-bottom-color: #5a7d7c;
+            font-weight: bold;
+        }
+
+        .tab:hover {
+            color: #5a7d7c;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-table {
+                font-size: 0.85rem;
+            }
+
+            .pricing-table th,
+            .pricing-table td {
+                padding: 10px 5px;
+            }
+
+            .timeline {
+                padding-left: 30px;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">IT | OPTIMIZATION</div>
+            <h1>🤖 AIOエージェント</h1>
+            <p class="subtitle">AI時代にWEBサイトを活かす</p>
+            <p class="subtitle">地域×AI検索参照化による福祉事業向け最適化サービス</p>
+            <p class="company">IT-Optimization株式会社</p>
+        </header>
+
+        <!-- はじめに -->
+        <div class="section">
+            <h2>💡 はじめに</h2>
+            <p>AIによる検索や情報提示の主導が加速し、GoogleのAI OverviewやAIモードをはじめ、AIが自動で情報を要約・引用する機会が急速に増えています。</p>
+            <div class="success-box">
+                <strong>これからの時代は、ユーザーに検索されることよりも、AIに参照・推薦されることが成果を左右します。</strong>
+            </div>
+            <p>そのためには、AIが理解しやすく、信頼できる情報構造を持つことが不可欠です。</p>
+            <p>AIOエージェントでは、<strong>「地域 × 検索意図 × 専門テーマ」</strong>を軸にした情報設計こそが、AIに選ばれ、地域で存在感を高める最大のチャンスだと考えています。</p>
+        </div>
+
+        <!-- サービスの特徴 -->
+        <div class="section">
+            <h2>✨ サービスの特徴</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <h4>1. 地域最適化構造</h4>
+                    <p>市区町村単位で検索意図を分解、近隣エリアも同時最適化</p>
+                </div>
+                <div class="feature-card">
+                    <h4>2. 検索意図ベース生成</h4>
+                    <p>ユーザー質問に沿ったFAQ＋HowTo＋制度情報をアウトプット</p>
+                </div>
+                <div class="feature-card">
+                    <h4>3. AI参照構造データ組込み</h4>
+                    <p>Schema.org対応でAIへの引用率を最大化</p>
+                </div>
+                <div class="feature-card">
+                    <h4>4. 10コンテンツ＝数百キーワード展開</h4>
+                    <p>自然検索・AI検索の両面で認知を拡大</p>
+                </div>
+                <div class="feature-card">
+                    <h4>5. 人に寄り添う構成</h4>
+                    <p>家族・医療・暮らし・費用・理念など「実際の会話トーン」で共感を得る</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 表示場所 -->
+        <div class="section">
+            <h2>📍 表示場所</h2>
+            <div class="tab-container">
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('google')">Google検索</button>
+                    <button class="tab" onclick="showTab('ai-chat')">チャット型AI</button>
+                </div>
+                <div id="google" class="tab-content active">
+                    <h3>Google検索での表示</h3>
+                    <ul>
+                        <li>Google AI Overview</li>
+                        <li>GoogleのAIモード</li>
+                    </ul>
+                    <p>検索結果の上部に表示され、ユーザーの目に最初に触れる位置でサイトが参照されます。</p>
+                </div>
+                <div id="ai-chat" class="tab-content">
+                    <h3>チャット型AIでの表示</h3>
+                    <ul>
+                        <li>Gemini（Google）</li>
+                        <li>ChatGPT（OpenAI）</li>
+                        <li>Claude（Anthropic）</li>
+                    </ul>
+                    <p>AI回答時の引用元として、貴社サイトが参照・推薦されます。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- サービス内容 -->
+        <div class="section">
+            <h2>📦 サービス内容</h2>
+
+            <div class="features">
+                <div class="feature-card">
+                    <h4>検索意図10テーマで参照・推薦を狙う</h4>
+                    <p>10テーマの検索意図で構成し、およそ3,000語の関連キーワードを自然に内包</p>
+                </div>
+                <div class="feature-card">
+                    <h4>独自性を持った10コンテンツを作成</h4>
+                    <p>1テーマ約3,000文字で構成、合計10本のコンテンツを制作。E-E-A-Tに準拠</p>
+                </div>
+                <div class="feature-card">
+                    <h4>監視・改善</h4>
+                    <p>AIO表示チェックツールの提供・構造化データチェック</p>
+                </div>
+                <div class="feature-card">
+                    <h4>成果保証</h4>
+                    <p>6カ月で保証を発動：コンテンツ設置完了日以降、60営業日～発動</p>
+                </div>
+                <div class="feature-card">
+                    <h4>運営体制サポート</h4>
+                    <p>営業・制作ディレクション・ライティング・SEO実装・監視のワンストップサポート</p>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number">10</div>
+                    <div class="stat-label">コンテンツ数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">~270</div>
+                    <div class="stat-label">1コンテンツあたりのKW</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">~2,700</div>
+                    <div class="stat-label">合計対象キーワード</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">3,000</div>
+                    <div class="stat-label">文字数/コンテンツ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 検索意図の選定 -->
+        <div class="section">
+            <h2>🎯 検索意図の選定</h2>
+            <p>地域×カテゴリー×検索意図で構成し、10テーマで約2,700キーワードを包括。AIが参照・推薦しやすい構造で、地域に最適化された情報発信を実現します。</p>
+
+            <h3>主要カテゴリー例（福祉事業向け）</h3>
+            <div class="keyword-table" style="overflow-x: auto;">
+                <table class="keyword-table">
+                    <thead>
+                        <tr>
+                            <th>大カテゴリー</th>
+                            <th>中カテゴリー例</th>
+                            <th>検索意図概要</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>費用・制度・条件系</strong></td>
+                            <td>費用・相場、入居条件、補助金</td>
+                            <td>費用・入居金・月額などの金額感を知りたい</td>
+                        </tr>
+                        <tr>
+                            <td><strong>医療・介護・生活支援系</strong></td>
+                            <td>医療・看護体制、認知症対応</td>
+                            <td>医療連携や24時間看護体制を確認したい</td>
+                        </tr>
+                        <tr>
+                            <td><strong>環境・設備・安全系</strong></td>
+                            <td>バリアフリー、セキュリティ</td>
+                            <td>段差や手すりなどバリアフリー設計を確認したい</td>
+                        </tr>
+                        <tr>
+                            <td><strong>サービス・日常生活系</strong></td>
+                            <td>レクリエーション、食事</td>
+                            <td>行事・イベント・活動内容を知りたい</td>
+                        </tr>
+                        <tr>
+                            <td><strong>信頼・比較・体験系</strong></td>
+                            <td>口コミ、見学・相談</td>
+                            <td>口コミ・レビュー・第三者評価を参考にしたい</td>
+                        </tr>
+                        <tr>
+                            <td><strong>地域・運営・理念系</strong></td>
+                            <td>地域連携、運営法人</td>
+                            <td>行政・地域包括支援センターとの連携を確認したい</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 料金プラン -->
+        <div class="section">
+            <h2>💰 料金プラン</h2>
+            <div style="overflow-x: auto;">
+                <table class="pricing-table">
+                    <thead>
+                        <tr>
+                            <th>プラン名</th>
+                            <th>料金（税込）</th>
+                            <th>契約期間</th>
+                            <th>成果保証<br>オプション</th>
+                            <th>監視・改善<br>ツール</th>
+                            <th>専属サポート</th>
+                            <th>支払方法</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>基本プラン</strong></td>
+                            <td class="price-highlight">66万円</td>
+                            <td>-</td>
+                            <td><span class="cross-icon">✗</span></td>
+                            <td><span class="cross-icon">✗</span></td>
+                            <td><span class="cross-icon">✗</span></td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><strong>月々プラン</strong></td>
+                            <td class="price-highlight">99万円</td>
+                            <td>1年</td>
+                            <td><span class="check-icon">○</span></td>
+                            <td><span class="check-icon">○</span></td>
+                            <td><span class="check-icon">○</span></td>
+                            <td>月々払い<br>82,500円</td>
+                        </tr>
+                        <tr>
+                            <td><strong>おまとめプラン</strong></td>
+                            <td class="price-highlight">88万円</td>
+                            <td>1年</td>
+                            <td><span class="check-icon">○</span></td>
+                            <td><span class="check-icon">○</span></td>
+                            <td><span class="check-icon">○</span></td>
+                            <td>一括払い</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-box">
+                <strong>注意事項</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>基本プランはコンテンツの納品のみとなります。</li>
+                    <li>契約期間は「月々プラン」「おまとめプラン」では1年です。</li>
+                    <li>AIコンテンツ生成機能の無償提供キャンペーンは「基本プラン」のみの契約にはお付けできません。</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- AI利用の流れ・データ -->
+        <div class="section">
+            <h2>📊 AI利用の現状</h2>
+            <div class="alert-box">
+                <strong>国内のSEO担当者の約62%が、AI Overviewsの登場以降、サイトへの自然検索流入が減少したと実感！</strong>
+            </div>
+            <div class="success-box">
+                <strong>SEOリソースをすでに見直した企業が3割、見直しを始めている企業は6割を超えており、"今やらなければ取り残される"という危機感が急速に広まっています！</strong>
+            </div>
+            <p style="margin-top: 15px;">参照：PR TIMES 調査データ</p>
+        </div>
+
+        <!-- サービスの流れ -->
+        <div class="section">
+            <h2>🔄 サービスの流れ</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <span class="period">契約〜8営業日</span>
+                    <h4>Step 1-3: ご契約〜情報提供</h4>
+                    <p>契約書の締結、請求書発行・ご入金、CMSのID・パスワード等の情報提供</p>
+                </div>
+                <div class="timeline-item">
+                    <span class="period">7営業日目</span>
+                    <h4>Step 4-5: 対策開始〜テーマ決定</h4>
+                    <p>対策開始のご連絡、対策対象となる18キーワードの最終選定</p>
+                </div>
+                <div class="timeline-item">
+                    <span class="period">30営業日目</span>
+                    <h4>Step 6-7: コンテンツ作成〜校正</h4>
+                    <p>レギュレーションに沿って記事を制作、誤字脱字などをチェック</p>
+                </div>
+                <div class="timeline-item">
+                    <span class="period">40-50営業日目</span>
+                    <h4>Step 8-9: 確認〜コーディング</h4>
+                    <p>コンテンツ確認（修正は原則1回）、記事情報をコーディング・構造化データ反映</p>
+                </div>
+                <div class="timeline-item">
+                    <span class="period">60営業日</span>
+                    <h4>Step 10-11: サイト反映〜完了</h4>
+                    <p>サイトへのコンテンツ反映、監視ツールの提供、成果保証サービス開始</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- お問い合わせ -->
+        <div class="section">
+            <h2>📞 お問い合わせ</h2>
+            <div class="features">
+                <div class="contact-info">
+                    <h4>サービス提供会社</h4>
+                    <p><strong>IT-OPTIMIZATION株式会社</strong></p>
+                    <p>〒210-0005 神奈川県川崎市川崎区東田町8</p>
+                    <p>URL: <a href="https://it-optimization.co.jp/" target="_blank">https://it-optimization.co.jp/</a></p>
+                    <p>Mail: info@it-opt.jp</p>
+                </div>
+                <div class="contact-info">
+                    <h4>販売代理店</h4>
+                    <p><strong>株式会社AI研修法人</strong></p>
+                    <p>〒143-0015 東京都大田区大森西4-15-8-106</p>
+                    <p>TEL: 03-6845-2860</p>
+                    <p>URL: <a href="https://ai-Kenshu.jp/" target="_blank">https://ai-Kenshu.jp/</a></p>
+                    <p>Mail: info@ai-Kenshu.jp</p>
+                </div>
+            </div>
+            <div class="success-box" style="margin-top: 30px; text-align: center;">
+                <strong>ご興味がありましたらお気軽にお問合せください</strong>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            // すべてのタブとコンテンツを非アクティブ化
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // クリックされたタブとそのコンテンツをアクティブ化
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // ページロード時のアニメーション
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('.section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animation = 'fadeIn 0.5s';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

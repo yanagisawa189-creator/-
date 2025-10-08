@@ -7,6 +7,8 @@ import { SheetsService } from './services/sheets.js';
 import { GoogleSerpApiProvider } from './providers/serp/google-serpapi.js';
 import { YahooSerpProvider } from './providers/serp/yahoo.js';
 import { ClaudeWebSearchProvider } from './providers/llm/claude.js';
+import { ChatGPTWebSearchProvider } from './providers/llm/chatgpt.js';
+import { GeminiGroundingProvider } from './providers/llm/gemini.js';
 import { AioAnalysisService } from './services/aio.js';
 import { KeywordConfig, DailyResult } from './types/core.js';
 
@@ -24,6 +26,8 @@ async function main() {
     const googleProvider = new GoogleSerpApiProvider(appConfig.serpApiKey);
     const yahooProvider = new YahooSerpProvider();
     const claudeProvider = new ClaudeWebSearchProvider(appConfig.anthropicApiKey);
+    const chatgptProvider = new ChatGPTWebSearchProvider(appConfig.openaiApiKey);
+    const geminiProvider = new GeminiGroundingProvider(appConfig.googleAiApiKey);
 
     await sheetsService.ensureHeaders();
 
@@ -45,13 +49,17 @@ async function main() {
         const googleResult = await processKeyword(
           config,
           googleProvider,
-          claudeProvider
+          claudeProvider,
+          chatgptProvider,
+          geminiProvider
         );
         if (googleResult) allResults.push(googleResult);
 
         const yahooResult = await processKeyword(
           config,
           yahooProvider,
+          null,
+          null,
           null
         );
         if (yahooResult) allResults.push(yahooResult);
@@ -80,7 +88,9 @@ async function main() {
 async function processKeyword(
   config: KeywordConfig,
   serpProvider: GoogleSerpApiProvider | YahooSerpProvider,
-  claudeProvider: ClaudeWebSearchProvider | null
+  claudeProvider: ClaudeWebSearchProvider | null,
+  chatgptProvider: ChatGPTWebSearchProvider | null,
+  geminiProvider: GeminiGroundingProvider | null
 ): Promise<DailyResult | null> {
   const engine = serpProvider.getEngine();
 
@@ -128,28 +138,102 @@ async function processKeyword(
       own_cited_urls: aioInfo.own_cited_urls || [],
     };
 
-    if (engine === 'google' && claudeProvider && claudeProvider.isEnabled()) {
-      try {
-        const claudeResult = await claudeProvider.checkCitations({
-          keyword: config.keyword,
-          lang: config.lang,
-        });
+    // LLM Citation Checks (Google only)
+    const llmResults: any[] = [];
 
-        if (claudeResult) {
-          const llmOwnCited = claudeProvider.checkTargetDomainMatch(
-            claudeResult.citations,
-            config.target_domains
-          );
+    if (engine === 'google') {
+      // Claude Web Search
+      if (claudeProvider && claudeProvider.isEnabled()) {
+        try {
+          const claudeResult = await claudeProvider.checkCitations({
+            keyword: config.keyword,
+            lang: config.lang,
+          });
 
-          result.llm_engine = claudeResult.llm_engine;
-          result.llm_answer_present = claudeResult.answer_present;
-          result.llm_citations = claudeResult.citations;
-          result.llm_own_cited = llmOwnCited;
-          result.llm_excerpt = claudeResult.excerpt;
+          if (claudeResult) {
+            const llmOwnCited = claudeProvider.checkTargetDomainMatch(
+              claudeResult.citations,
+              config.target_domains
+            );
+
+            llmResults.push({
+              llm_engine: claudeResult.llm_engine,
+              llm_answer_present: claudeResult.answer_present,
+              llm_citations: claudeResult.citations,
+              llm_own_cited: llmOwnCited,
+              llm_excerpt: claudeResult.excerpt,
+            });
+          }
+        } catch (error) {
+          log(`Claude Web Searchエラー: ${error}`, 'warn');
         }
-      } catch (error) {
-        log(`Claude Web Searchエラー: ${error}`, 'warn');
       }
+
+      // ChatGPT Web Search
+      if (chatgptProvider && chatgptProvider.isEnabled()) {
+        try {
+          const chatgptResult = await chatgptProvider.checkCitations({
+            keyword: config.keyword,
+            lang: config.lang,
+          });
+
+          if (chatgptResult) {
+            const llmOwnCited = chatgptProvider.checkTargetDomainMatch(
+              chatgptResult.citations,
+              config.target_domains
+            );
+
+            llmResults.push({
+              llm_engine: chatgptResult.llm_engine,
+              llm_answer_present: chatgptResult.answer_present,
+              llm_citations: chatgptResult.citations,
+              llm_own_cited: llmOwnCited,
+              llm_excerpt: chatgptResult.excerpt,
+            });
+          }
+        } catch (error) {
+          log(`ChatGPT Web Searchエラー: ${error}`, 'warn');
+        }
+      }
+
+      // Gemini Grounding
+      if (geminiProvider && geminiProvider.isEnabled()) {
+        try {
+          const geminiResult = await geminiProvider.checkCitations({
+            keyword: config.keyword,
+            lang: config.lang,
+          });
+
+          if (geminiResult) {
+            const llmOwnCited = geminiProvider.checkTargetDomainMatch(
+              geminiResult.citations,
+              config.target_domains
+            );
+
+            llmResults.push({
+              llm_engine: geminiResult.llm_engine,
+              llm_answer_present: geminiResult.answer_present,
+              llm_citations: geminiResult.citations,
+              llm_own_cited: llmOwnCited,
+              llm_excerpt: geminiResult.excerpt,
+            });
+          }
+        } catch (error) {
+          log(`Gemini Groundingエラー: ${error}`, 'warn');
+        }
+      }
+
+      // Store first LLM result for backward compatibility
+      if (llmResults.length > 0) {
+        result.llm_engine = llmResults[0].llm_engine;
+        result.llm_answer_present = llmResults[0].llm_answer_present;
+        result.llm_citations = llmResults[0].llm_citations;
+        result.llm_own_cited = llmResults[0].llm_own_cited;
+        result.llm_excerpt = llmResults[0].llm_excerpt;
+      }
+
+      // Store all LLM results
+      (result as any).llm_results = llmResults;
     }
 
     return result;
@@ -190,20 +274,28 @@ function displayResultSummary(
     if (googleResult.aio_present) {
       log(`  AIOソース: ${googleResult.aio_sources.slice(0, 3).join(', ')}${googleResult.aio_sources.length > 3 ? '...' : ''}`);
     }
-    if (googleResult.llm_engine) {
-      log(`  Claude: 回答=${googleResult.llm_answer_present ? '✓' : '–'} 自社引用=${googleResult.llm_own_cited ? '★' : '–'}`);
+
+    // Display all LLM results
+    const llmResults = (googleResult as any).llm_results || [];
+    if (llmResults.length > 0) {
+      llmResults.forEach((llm: any) => {
+        const engineName = llm.llm_engine === 'claude' ? 'Claude' :
+                          llm.llm_engine === 'chatgpt' ? 'ChatGPT' :
+                          llm.llm_engine === 'gemini' ? 'Gemini' : llm.llm_engine;
+        log(`  ${engineName}: 回答=${llm.llm_answer_present ? '✓' : '–'} 自社引用=${llm.llm_own_cited ? '★' : '–'}`);
+      });
     }
   }
 
   if (yahooResult) {
-    log(`Yahoo!: 順位=${yahooResult.serp_rank || 'N/A'} (上位3件: ${yahooResult.serp_top100.slice(0, 3).map(item => item.domain).join(', ')})`);
+    log(`Yahoo!: 順位=${yahooResult.serp_rank || 'N/A'} (上位3件: ${yahooResult.serp_top100.slice(0, 3).map(item => item.domain || 'N/A').join(', ')})`);
   }
 }
 
 async function saveResultsLocally(results: DailyResult[]): Promise<void> {
   try {
     const outputDir = appConfig.outputDir;
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0] || '';
     const dateDir = join(outputDir, today);
 
     await fs.mkdir(dateDir, { recursive: true });

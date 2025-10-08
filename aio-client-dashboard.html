@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIOチェッカー - クライアントダッシュボード</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 36px;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .date-display {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #f3f4f6;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            text-align: center;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .summary-card .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .summary-card .label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .summary-card .value {
+            font-size: 42px;
+            font-weight: 800;
+            color: #333;
+        }
+
+        .summary-card.good .value {
+            color: #10b981;
+        }
+
+        .summary-card.warning .value {
+            color: #f59e0b;
+        }
+
+        .summary-card.danger .value {
+            color: #ef4444;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .keyword-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .keyword-item {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .keyword-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .keyword-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .keyword-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .status-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .keyword-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-box {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .metric-value.good {
+            color: #10b981;
+        }
+
+        .metric-value.bad {
+            color: #ef4444;
+        }
+
+        .llm-summary {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .llm-summary-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .llm-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .llm-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .llm-icon {
+            font-size: 24px;
+        }
+
+        .llm-info {
+            flex: 1;
+        }
+
+        .llm-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .llm-status {
+            font-size: 12px;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .llm-status.cited {
+            color: #10b981;
+        }
+
+        .llm-status.not-cited {
+            color: #6b7280;
+        }
+
+        .chart-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .chart-wrapper {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .recommendations {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .recommendation-item {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .recommendation-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .recommendation-content h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .recommendation-content p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 80px 20px;
+            color: #9ca3af;
+        }
+
+        .no-data-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .load-button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .load-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .keyword-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 AIO検索順位レポート</h1>
+            <p class="subtitle">あなたのサイトのAI検索での表示状況</p>
+            <div class="date-display" id="report-date">レポート日時: 読み込み待ち</div>
+            <br>
+            <label for="file-upload" class="load-button">
+                📁 最新レポートを読み込む
+            </label>
+            <input id="file-upload" type="file" accept=".json" onchange="loadData(event)">
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <!-- サマリーカード -->
+            <div class="summary-cards">
+                <div class="summary-card good">
+                    <div class="icon">🎯</div>
+                    <div class="label">監視キーワード数</div>
+                    <div class="value" id="total-keywords">0</div>
+                </div>
+
+                <div class="summary-card good">
+                    <div class="icon">⭐</div>
+                    <div class="label">AI引用獲得数</div>
+                    <div class="value" id="ai-citations">0</div>
+                </div>
+
+                <div class="summary-card info">
+                    <div class="icon">📈</div>
+                    <div class="label">平均検索順位</div>
+                    <div class="value" id="avg-rank">-</div>
+                </div>
+
+                <div class="summary-card warning">
+                    <div class="icon">🔍</div>
+                    <div class="label">改善可能性</div>
+                    <div class="value" id="improvement-potential">0</div>
+                </div>
+            </div>
+
+            <!-- メインコンテンツ：キーワード詳細 -->
+            <div class="main-content">
+                <h2 class="section-title">
+                    <span>📋</span>
+                    <span>キーワード別詳細レポート</span>
+                </h2>
+                <div class="keyword-list" id="keyword-list"></div>
+            </div>
+
+            <!-- グラフセクション -->
+            <div class="chart-section">
+                <h2 class="section-title">
+                    <span>📊</span>
+                    <span>データ分析</span>
+                </h2>
+                <div class="charts-grid">
+                    <div class="chart-wrapper">
+                        <div class="chart-title">AI Overview 表示状況</div>
+                        <canvas id="aioChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">検索エンジン別パフォーマンス</div>
+                        <canvas id="engineChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">LLM引用状況</div>
+                        <canvas id="llmChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart-title">デバイス別分布</div>
+                        <canvas id="deviceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 推奨アクション -->
+            <div class="recommendations">
+                <h2 class="section-title">
+                    <span>💡</span>
+                    <span>改善提案</span>
+                </h2>
+                <div id="recommendations-list"></div>
+            </div>
+        </div>
+
+        <div class="no-data" id="no-data">
+            <div class="no-data-icon">📊</div>
+            <h2>レポートデータを読み込んでください</h2>
+            <p>上部のボタンから最新のレポートJSONファイルを選択してください</p>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 AIO表示チェッカー | クライアント専用ダッシュボード</p>
+        </div>
+    </div>
+
+    <script>
+        let charts = {};
+
+        function loadData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const results = Array.isArray(data) ? data : [data];
+                    displayDashboard(results);
+                } catch (error) {
+                    alert('ファイルの読み込みに失敗しました: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function displayDashboard(data) {
+            // Hide no-data, show dashboard
+            document.getElementById('no-data').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+
+            // Update date
+            if (data.length > 0) {
+                document.getElementById('report-date').textContent =
+                    'レポート日時: ' + new Date(data[0].run_at).toLocaleString('ja-JP');
+            }
+
+            // Calculate summary stats
+            const uniqueKeywords = new Set(data.map(d => d.keyword)).size;
+            const aiCitations = data.filter(d => d.own_cited).length;
+
+            const rankedResults = data.filter(d => d.serp_rank && d.serp_rank > 0);
+            const avgRank = rankedResults.length > 0
+                ? Math.round(rankedResults.reduce((sum, d) => sum + d.serp_rank, 0) / rankedResults.length)
+                : '-';
+
+            const improvementPotential = data.filter(d => d.aio_present && !d.own_cited).length;
+
+            document.getElementById('total-keywords').textContent = uniqueKeywords;
+            document.getElementById('ai-citations').textContent = aiCitations;
+            document.getElementById('avg-rank').textContent = avgRank === '-' ? avgRank : avgRank + '位';
+            document.getElementById('improvement-potential').textContent = improvementPotential;
+
+            // Display keyword details
+            displayKeywords(data);
+
+            // Display charts
+            displayCharts(data);
+
+            // Generate recommendations
+            generateRecommendations(data, improvementPotential, avgRank);
+        }
+
+        function displayKeywords(data) {
+            const container = document.getElementById('keyword-list');
+            container.innerHTML = '';
+
+            // Group by keyword
+            const keywordMap = {};
+            data.forEach(result => {
+                if (!keywordMap[result.keyword]) {
+                    keywordMap[result.keyword] = [];
+                }
+                keywordMap[result.keyword].push(result);
+            });
+
+            Object.keys(keywordMap).forEach(keyword => {
+                const results = keywordMap[keyword];
+                const googleResult = results.find(r => r.engine === 'google');
+                const yahooResult = results.find(r => r.engine === 'yahoo');
+
+                const item = document.createElement('div');
+                item.className = 'keyword-item';
+
+                let llmHTML = '';
+                if (googleResult && googleResult.llm_results && googleResult.llm_results.length > 0) {
+                    llmHTML = `
+                        <div class="llm-summary">
+                            <div class="llm-summary-title">🤖 AI検索エンジンでの引用状況</div>
+                            <div class="llm-items">
+                                ${googleResult.llm_results.map(llm => {
+                                    const isCited = llm.llm_own_cited;
+                                    return `
+                                        <div class="llm-item">
+                                            <div class="llm-icon">${llm.llm_engine === 'claude' ? '🧠' : llm.llm_engine === 'chatgpt' ? '💬' : '✨'}</div>
+                                            <div class="llm-info">
+                                                <div class="llm-name">${llm.llm_engine.toUpperCase()}</div>
+                                                <div class="llm-status ${isCited ? 'cited' : 'not-cited'}">
+                                                    ${isCited ? '✅ 引用あり' : '— 引用なし'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                item.innerHTML = `
+                    <div class="keyword-header">
+                        <div class="keyword-name">${keyword}</div>
+                        <div class="status-badges">
+                            ${googleResult && googleResult.aio_present ?
+                                '<span class="status-badge success">✅ AIO表示あり</span>' :
+                                '<span class="status-badge warning">⚠️ AIO表示なし</span>'}
+                            ${googleResult && googleResult.own_cited ?
+                                '<span class="status-badge success">⭐ 自社引用あり</span>' : ''}
+                        </div>
+                    </div>
+
+                    <div class="keyword-metrics">
+                        ${googleResult ? `
+                            <div class="metric-box">
+                                <div class="metric-label">Google 順位</div>
+                                <div class="metric-value ${googleResult.serp_rank && googleResult.serp_rank <= 10 ? 'good' : ''}">${googleResult.serp_rank || '圏外'}</div>
+                            </div>
+                        ` : ''}
+                        ${yahooResult ? `
+                            <div class="metric-box">
+                                <div class="metric-label">Yahoo! 順位</div>
+                                <div class="metric-value ${yahooResult.serp_rank && yahooResult.serp_rank <= 10 ? 'good' : ''}">${yahooResult.serp_rank || '圏外'}</div>
+                            </div>
+                        ` : ''}
+                        ${googleResult && googleResult.aio_sources ? `
+                            <div class="metric-box">
+                                <div class="metric-label">AIO引用元数</div>
+                                <div class="metric-value">${googleResult.aio_sources.length}</div>
+                            </div>
+                        ` : ''}
+                        ${googleResult ? `
+                            <div class="metric-box">
+                                <div class="metric-label">デバイス</div>
+                                <div class="metric-value" style="font-size: 18px;">${googleResult.device === 'desktop' ? '🖥️ PC' : '📱 モバイル'}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    ${llmHTML}
+                `;
+
+                container.appendChild(item);
+            });
+        }
+
+        function displayCharts(data) {
+            // Destroy existing charts
+            Object.values(charts).forEach(chart => chart.destroy());
+
+            // AIO Chart
+            const aioYes = data.filter(d => d.aio_present).length;
+            const aioNo = data.length - aioYes;
+
+            charts.aio = new Chart(document.getElementById('aioChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['表示あり', '表示なし'],
+                    datasets: [{
+                        data: [aioYes, aioNo],
+                        backgroundColor: ['#10b981', '#e5e7eb'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // Engine Chart
+            const googleData = data.filter(d => d.engine === 'google');
+            const yahooData = data.filter(d => d.engine === 'yahoo');
+
+            charts.engine = new Chart(document.getElementById('engineChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Google', 'Yahoo!'],
+                    datasets: [{
+                        label: '検索実施数',
+                        data: [googleData.length, yahooData.length],
+                        backgroundColor: ['#4285f4', '#7b0099'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // LLM Chart
+            const llmData = { claude: 0, chatgpt: 0, gemini: 0 };
+            data.forEach(d => {
+                if (d.llm_results) {
+                    d.llm_results.forEach(llm => {
+                        if (llm.llm_own_cited) {
+                            llmData[llm.llm_engine] = (llmData[llm.llm_engine] || 0) + 1;
+                        }
+                    });
+                }
+            });
+
+            charts.llm = new Chart(document.getElementById('llmChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Claude', 'ChatGPT', 'Gemini'],
+                    datasets: [{
+                        label: '引用獲得数',
+                        data: [llmData.claude || 0, llmData.chatgpt || 0, llmData.gemini || 0],
+                        backgroundColor: ['#ff6b35', '#10a37f', '#4285f4'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Device Chart
+            const desktop = data.filter(d => d.device === 'desktop').length;
+            const mobile = data.filter(d => d.device === 'mobile').length;
+
+            charts.device = new Chart(document.getElementById('deviceChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['PC', 'モバイル'],
+                    datasets: [{
+                        data: [desktop, mobile],
+                        backgroundColor: ['#6b7280', '#10b981'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function generateRecommendations(data, improvementPotential, avgRank) {
+            const container = document.getElementById('recommendations-list');
+            const recommendations = [];
+
+            if (improvementPotential > 0) {
+                recommendations.push({
+                    icon: '🎯',
+                    title: 'AIO引用獲得のチャンス',
+                    text: `${improvementPotential}件のキーワードでAIOは表示されていますが、まだ引用されていません。コンテンツの質と関連性を高めることで引用される可能性があります。`
+                });
+            }
+
+            if (avgRank > 10) {
+                recommendations.push({
+                    icon: '📈',
+                    title: '検索順位の改善',
+                    text: `現在の平均順位は${avgRank}位です。上位10位以内を目指すことでAIOへの引用確率が高まります。SEO対策の強化をお勧めします。`
+                });
+            }
+
+            const noAio = data.filter(d => !d.aio_present).length;
+            if (noAio > 0) {
+                recommendations.push({
+                    icon: '🔍',
+                    title: 'AIO未表示キーワードの分析',
+                    text: `${noAio}件のキーワードでAIOが表示されていません。これらのキーワードの検索意図を再分析し、より適切なコンテンツ戦略を検討しましょう。`
+                });
+            }
+
+            const llmCitations = data.reduce((sum, d) => {
+                if (d.llm_results) {
+                    return sum + d.llm_results.filter(llm => llm.llm_own_cited).length;
+                }
+                return sum;
+            }, 0);
+
+            if (llmCitations > 0) {
+                recommendations.push({
+                    icon: '⭐',
+                    title: 'AI検索での優位性',
+                    text: `Claude、ChatGPT、Geminiで合計${llmCitations}件の引用を獲得しています。この強みを活かし、さらなる専門性の高いコンテンツ作成を推奨します。`
+                });
+            }
+
+            container.innerHTML = recommendations.map(rec => `
+                <div class="recommendation-item">
+                    <div class="recommendation-icon">${rec.icon}</div>
+                    <div class="recommendation-content">
+                        <h3>${rec.title}</h3>
+                        <p>${rec.text}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIO表示チェッカー - 総合ダッシュボード v3</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .file-input-wrapper {
+            margin-bottom: 15px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .custom-file-upload {
+            display: inline-block;
+            padding: 12px 24px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .custom-file-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-name {
+            margin-left: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            color: #333;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .stat-card.positive .value {
+            color: #10b981;
+        }
+
+        .stat-card.negative .value {
+            color: #ef4444;
+        }
+
+        .stat-card.info .value {
+            color: #3b82f6;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .result-item {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .result-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .keyword {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.google {
+            background: #4285f4;
+            color: white;
+        }
+
+        .badge.yahoo {
+            background: #7b0099;
+            color: white;
+        }
+
+        .badge.desktop {
+            background: #6b7280;
+            color: white;
+        }
+
+        .badge.mobile {
+            background: #10b981;
+            color: white;
+        }
+
+        .badge.aio-yes {
+            background: #10b981;
+            color: white;
+        }
+
+        .badge.aio-no {
+            background: #ef4444;
+            color: white;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .llm-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .llm-section h4 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .llm-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .llm-card {
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .llm-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .llm-card.claude {
+            border-left: 4px solid #ff6b35;
+        }
+
+        .llm-card.chatgpt {
+            border-left: 4px solid #10a37f;
+        }
+
+        .llm-card.gemini {
+            border-left: 4px solid #4285f4;
+        }
+
+        .llm-card h5 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .llm-status {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .llm-status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .status-icon {
+            font-size: 18px;
+        }
+
+        .citations {
+            margin-top: 12px;
+        }
+
+        .citations-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .citation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .citation-item {
+            font-size: 13px;
+            color: #3b82f6;
+            text-decoration: none;
+            word-break: break-all;
+            padding: 6px 10px;
+            background: #eff6ff;
+            border-radius: 6px;
+            transition: background 0.2s ease;
+        }
+
+        .citation-item:hover {
+            background: #dbeafe;
+        }
+
+        .excerpt {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f3f4f6;
+            border-left: 3px solid #667eea;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #4b5563;
+            font-style: italic;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+
+        .no-data svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .llm-results {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .export-btn {
+            padding: 12px 24px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 15px;
+        }
+
+        .export-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 AIO表示チェッカー - 総合ダッシュボード v3</h1>
+            <p>Google・Yahoo!検索順位 × AIO表示 × LLM引用（Claude・ChatGPT・Gemini）を統合監視</p>
+        </div>
+
+        <div class="controls">
+            <h2>📁 データ読み込み</h2>
+            <div class="file-input-wrapper">
+                <label for="file-upload" class="custom-file-upload">
+                    📤 結果JSONファイルを選択
+                </label>
+                <input id="file-upload" type="file" accept=".json" onchange="loadResults(event)">
+                <span class="file-name" id="file-name">ファイルが選択されていません</span>
+                <button class="export-btn" onclick="exportToCSV()" id="export-btn" style="display: none;">
+                    📊 CSV出力
+                </button>
+            </div>
+        </div>
+
+        <div id="stats" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card info">
+                    <h3>総キーワード数</h3>
+                    <div class="value" id="total-keywords">0</div>
+                </div>
+                <div class="stat-card positive">
+                    <h3>AIO表示あり</h3>
+                    <div class="value" id="aio-present">0</div>
+                </div>
+                <div class="stat-card positive">
+                    <h3>自社サイト引用</h3>
+                    <div class="value" id="own-cited">0</div>
+                </div>
+                <div class="stat-card info">
+                    <h3>LLM引用率</h3>
+                    <div class="value" id="llm-citation-rate">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="charts" class="chart-container" style="display: none;">
+            <h2>📊 統計グラフ</h2>
+            <div class="charts-grid">
+                <div>
+                    <canvas id="aioChart"></canvas>
+                </div>
+                <div>
+                    <canvas id="llmChart"></canvas>
+                </div>
+                <div>
+                    <canvas id="deviceChart"></canvas>
+                </div>
+                <div>
+                    <canvas id="engineChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="results" class="results-section" style="display: none;">
+            <h2>📋 詳細結果</h2>
+            <div id="results-list"></div>
+        </div>
+
+        <div class="no-data" id="no-data">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3>データがまだ読み込まれていません</h3>
+            <p>上記のボタンから結果JSONファイルを選択してください</p>
+        </div>
+    </div>
+
+    <script>
+        let currentData = null;
+        let charts = {};
+
+        function loadResults(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('file-name').textContent = file.name;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    currentData = Array.isArray(data) ? data : [data];
+                    displayResults(currentData);
+                    displayStats(currentData);
+                    displayCharts(currentData);
+
+                    document.getElementById('no-data').style.display = 'none';
+                    document.getElementById('stats').style.display = 'block';
+                    document.getElementById('charts').style.display = 'block';
+                    document.getElementById('results').style.display = 'block';
+                    document.getElementById('export-btn').style.display = 'inline-block';
+                } catch (error) {
+                    alert('JSONファイルの読み込みに失敗しました: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function displayStats(data) {
+            const totalKeywords = new Set(data.map(d => d.keyword)).size;
+            const aioPresent = data.filter(d => d.aio_present).length;
+            const ownCited = data.filter(d => d.own_cited).length;
+
+            let llmCitations = 0;
+            let llmTotal = 0;
+            data.forEach(d => {
+                if (d.llm_results && d.llm_results.length > 0) {
+                    llmTotal += d.llm_results.length;
+                    llmCitations += d.llm_results.filter(llm => llm.llm_own_cited).length;
+                } else if (d.llm_engine) {
+                    llmTotal++;
+                    if (d.llm_own_cited) llmCitations++;
+                }
+            });
+
+            const llmRate = llmTotal > 0 ? Math.round((llmCitations / llmTotal) * 100) : 0;
+
+            document.getElementById('total-keywords').textContent = totalKeywords;
+            document.getElementById('aio-present').textContent = aioPresent;
+            document.getElementById('own-cited').textContent = ownCited;
+            document.getElementById('llm-citation-rate').textContent = llmRate + '%';
+        }
+
+        function displayCharts(data) {
+            // Destroy existing charts
+            Object.values(charts).forEach(chart => chart.destroy());
+            charts = {};
+
+            // AIO Chart
+            const aioYes = data.filter(d => d.aio_present).length;
+            const aioNo = data.length - aioYes;
+
+            const ctx1 = document.getElementById('aioChart').getContext('2d');
+            charts.aio = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['AIO表示あり', 'AIO表示なし'],
+                    datasets: [{
+                        data: [aioYes, aioNo],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'AIO表示状況'
+                        }
+                    }
+                }
+            });
+
+            // LLM Chart
+            const llmData = {};
+            data.forEach(d => {
+                if (d.llm_results && d.llm_results.length > 0) {
+                    d.llm_results.forEach(llm => {
+                        const engine = llm.llm_engine;
+                        if (!llmData[engine]) {
+                            llmData[engine] = { cited: 0, total: 0 };
+                        }
+                        llmData[engine].total++;
+                        if (llm.llm_own_cited) llmData[engine].cited++;
+                    });
+                } else if (d.llm_engine) {
+                    const engine = d.llm_engine;
+                    if (!llmData[engine]) {
+                        llmData[engine] = { cited: 0, total: 0 };
+                    }
+                    llmData[engine].total++;
+                    if (d.llm_own_cited) llmData[engine].cited++;
+                }
+            });
+
+            const llmLabels = Object.keys(llmData);
+            const llmCitedCounts = llmLabels.map(label => llmData[label].cited);
+            const llmNotCitedCounts = llmLabels.map(label => llmData[label].total - llmData[label].cited);
+
+            const ctx2 = document.getElementById('llmChart').getContext('2d');
+            charts.llm = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: llmLabels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+                    datasets: [
+                        {
+                            label: '自社引用あり',
+                            data: llmCitedCounts,
+                            backgroundColor: '#10b981',
+                        },
+                        {
+                            label: '自社引用なし',
+                            data: llmNotCitedCounts,
+                            backgroundColor: '#ef4444',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'LLM引用状況（Claude/ChatGPT/Gemini）'
+                        }
+                    },
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true }
+                    }
+                }
+            });
+
+            // Device Chart
+            const deviceData = {};
+            data.forEach(d => {
+                const device = d.device || 'unknown';
+                deviceData[device] = (deviceData[device] || 0) + 1;
+            });
+
+            const ctx3 = document.getElementById('deviceChart').getContext('2d');
+            charts.device = new Chart(ctx3, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(deviceData).map(d => d.charAt(0).toUpperCase() + d.slice(1)),
+                    datasets: [{
+                        data: Object.values(deviceData),
+                        backgroundColor: ['#6b7280', '#10b981'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'デバイス別分布'
+                        }
+                    }
+                }
+            });
+
+            // Engine Chart
+            const engineData = {};
+            data.forEach(d => {
+                const engine = d.engine || 'unknown';
+                engineData[engine] = (engineData[engine] || 0) + 1;
+            });
+
+            const ctx4 = document.getElementById('engineChart').getContext('2d');
+            charts.engine = new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(engineData).map(e => e.charAt(0).toUpperCase() + e.slice(1)),
+                    datasets: [{
+                        label: '検索回数',
+                        data: Object.values(engineData),
+                        backgroundColor: ['#4285f4', '#7b0099'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '検索エンジン別分布'
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayResults(data) {
+            const container = document.getElementById('results-list');
+            container.innerHTML = '';
+
+            data.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+
+                const llmResults = result.llm_results || (result.llm_engine ? [{
+                    llm_engine: result.llm_engine,
+                    llm_answer_present: result.llm_answer_present,
+                    llm_citations: result.llm_citations,
+                    llm_own_cited: result.llm_own_cited,
+                    llm_excerpt: result.llm_excerpt
+                }] : []);
+
+                let llmHTML = '';
+                if (llmResults.length > 0) {
+                    llmHTML = `
+                        <div class="llm-section">
+                            <h4>🤖 LLM引用チェック結果</h4>
+                            <div class="llm-results">
+                                ${llmResults.map(llm => {
+                                    const engineClass = llm.llm_engine.toLowerCase();
+                                    const engineName = llm.llm_engine.charAt(0).toUpperCase() + llm.llm_engine.slice(1);
+                                    const citations = llm.llm_citations || [];
+
+                                    return `
+                                        <div class="llm-card ${engineClass}">
+                                            <h5>${engineName}</h5>
+                                            <div class="llm-status">
+                                                <div class="llm-status-item">
+                                                    <span class="status-icon">${llm.llm_answer_present ? '✅' : '❌'}</span>
+                                                    <span>回答: ${llm.llm_answer_present ? 'あり' : 'なし'}</span>
+                                                </div>
+                                                <div class="llm-status-item">
+                                                    <span class="status-icon">${llm.llm_own_cited ? '⭐' : '–'}</span>
+                                                    <span>自社引用: ${llm.llm_own_cited ? 'あり' : 'なし'}</span>
+                                                </div>
+                                            </div>
+                                            ${citations.length > 0 ? `
+                                                <div class="citations">
+                                                    <div class="citations-label">引用元 (${citations.length}件)</div>
+                                                    <div class="citation-list">
+                                                        ${citations.slice(0, 3).map(url => `
+                                                            <a href="${url}" class="citation-item" target="_blank">${url}</a>
+                                                        `).join('')}
+                                                        ${citations.length > 3 ? `<span style="font-size: 12px; color: #6b7280;">他 ${citations.length - 3}件...</span>` : ''}
+                                                    </div>
+                                                </div>
+                                            ` : ''}
+                                            ${llm.llm_excerpt ? `
+                                                <div class="excerpt">
+                                                    ${llm.llm_excerpt}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                item.innerHTML = `
+                    <div class="result-header">
+                        <div class="keyword">${result.keyword}</div>
+                        <div class="badges">
+                            <span class="badge ${result.engine === 'google' ? 'google' : 'yahoo'}">${result.engine.toUpperCase()}</span>
+                            <span class="badge ${result.device === 'desktop' ? 'desktop' : 'mobile'}">${result.device.toUpperCase()}</span>
+                            <span class="badge ${result.aio_present ? 'aio-yes' : 'aio-no'}">
+                                AIO: ${result.aio_present ? 'あり' : 'なし'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <div class="detail-label">検索順位</div>
+                            <div class="detail-value">${result.serp_rank || 'N/A'}位</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">自社サイト引用</div>
+                            <div class="detail-value">${result.own_cited ? '✅ あり' : '❌ なし'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">AIOソース数</div>
+                            <div class="detail-value">${(result.aio_sources || []).length}件</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">ステータス</div>
+                            <div class="detail-value">${result.job_status === 'ok' ? '✅ 成功' : '❌ 失敗'}</div>
+                        </div>
+                    </div>
+                    ${llmHTML}
+                    <div class="timestamp">実行日時: ${result.run_at}</div>
+                `;
+
+                container.appendChild(item);
+            });
+        }
+
+        function exportToCSV() {
+            if (!currentData || currentData.length === 0) {
+                alert('エクスポートするデータがありません');
+                return;
+            }
+
+            const headers = [
+                '実行日時', 'キーワード', '検索エンジン', 'デバイス', '言語',
+                '検索順位', 'AIO表示', '自社引用', 'AIOソース数',
+                'Claude回答', 'Claude自社引用', 'ChatGPT回答', 'ChatGPT自社引用',
+                'Gemini回答', 'Gemini自社引用', 'ステータス'
+            ];
+
+            const rows = currentData.map(result => {
+                const llmResults = result.llm_results || [];
+                const claude = llmResults.find(llm => llm.llm_engine === 'claude') || {};
+                const chatgpt = llmResults.find(llm => llm.llm_engine === 'chatgpt') || {};
+                const gemini = llmResults.find(llm => llm.llm_engine === 'gemini') || {};
+
+                return [
+                    result.run_at,
+                    result.keyword,
+                    result.engine,
+                    result.device,
+                    result.lang,
+                    result.serp_rank || 'N/A',
+                    result.aio_present ? 'あり' : 'なし',
+                    result.own_cited ? 'あり' : 'なし',
+                    (result.aio_sources || []).length,
+                    claude.llm_answer_present ? 'あり' : 'なし',
+                    claude.llm_own_cited ? 'あり' : 'なし',
+                    chatgpt.llm_answer_present ? 'あり' : 'なし',
+                    chatgpt.llm_own_cited ? 'あり' : 'なし',
+                    gemini.llm_answer_present ? 'あり' : 'なし',
+                    gemini.llm_own_cited ? 'あり' : 'なし',
+                    result.job_status
+                ].map(cell => `"${cell}"`).join(',');
+            });
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `aio-results-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
