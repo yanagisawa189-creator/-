@@ -27,6 +27,7 @@ sys.path.insert(0, parent_dir)
 from main import SalesLeadGenerator
 from models import SearchQuery, BusinessSize
 from config.config import config
+from history_manager import HistoryManager
 
 # ロギング設定
 logging.basicConfig(level=logging.INFO)
@@ -169,6 +170,9 @@ class WebJobManager:
 # ジョブマネージャーのインスタンス
 job_manager = WebJobManager()
 
+# 履歴マネージャーのインスタンス
+history_manager = HistoryManager()
+
 @app.route('/')
 def index():
     """メインページ"""
@@ -285,6 +289,12 @@ def demo():
     """デモページ（モックデータ使用）"""
     return render_template('demo.html')
 
+@app.route('/history')
+def history():
+    """履歴管理ページ"""
+    stats = history_manager.get_statistics()
+    return render_template('history.html', stats=stats)
+
 @app.route('/api/demo', methods=['POST'])
 def api_demo():
     """デモAPI（モックデータ）"""
@@ -365,6 +375,60 @@ def api_demo():
 
     except Exception as e:
         logger.error(f"Demo API error: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/history', methods=['GET'])
+def api_get_history():
+    """履歴取得API"""
+    try:
+        limit = request.args.get('limit', 100, type=int)
+        offset = request.args.get('offset', 0, type=int)
+
+        history_data = history_manager.get_history(limit=limit, offset=offset)
+        total_count = history_manager.get_history_count()
+
+        return jsonify({
+            'success': True,
+            'data': history_data,
+            'total': total_count,
+            'limit': limit,
+            'offset': offset
+        })
+    except Exception as e:
+        logger.error(f"History API error: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/history/<path:url>', methods=['DELETE'])
+def api_delete_history(url):
+    """履歴削除API"""
+    try:
+        success = history_manager.delete_by_url(url)
+        if success:
+            return jsonify({'success': True, 'message': '削除しました'})
+        else:
+            return jsonify({'error': '該当する履歴が見つかりません'}), 404
+    except Exception as e:
+        logger.error(f"Delete history error: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/history/clear', methods=['POST'])
+def api_clear_history():
+    """全履歴削除API"""
+    try:
+        count = history_manager.clear_all()
+        return jsonify({'success': True, 'message': f'{count}件の履歴を削除しました', 'deleted_count': count})
+    except Exception as e:
+        logger.error(f"Clear history error: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/history/stats', methods=['GET'])
+def api_history_stats():
+    """履歴統計API"""
+    try:
+        stats = history_manager.get_statistics()
+        return jsonify({'success': True, 'stats': stats})
+    except Exception as e:
+        logger.error(f"History stats error: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 # WebSocket イベント

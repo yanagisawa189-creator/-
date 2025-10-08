@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block title %}履歴管理{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #4f46e5;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        margin-top: 0.5rem;
+    }
+
+    .history-table {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .history-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .history-table th {
+        background: #f3f4f6;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .history-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .history-table tr:hover {
+        background: #f9fafb;
+    }
+
+    .delete-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+
+    .delete-btn:hover {
+        background: #dc2626;
+    }
+
+    .clear-all-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .clear-all-btn:hover {
+        background: #dc2626;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+
+    .pagination button {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .pagination button:hover:not(:disabled) {
+        background: #f3f4f6;
+    }
+
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pagination .active {
+        background: #4f46e5;
+        color: white;
+        border-color: #4f46e5;
+    }
+
+    .top-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .top-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6b7280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold mb-2">📋 履歴管理</h1>
+        <p class="text-gray-600">過去に生成した企業の履歴を管理します</p>
+    </div>
+
+    <!-- 統計情報 -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number" id="total-count">{{ stats.total_count }}</div>
+            <div class="stat-label">総件数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="last-added">
+                {% if stats.last_added %}
+                    {{ stats.last_added[:10] }}
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+            <div class="stat-label">最終追加日</div>
+        </div>
+    </div>
+
+    <!-- Top業種・地域 -->
+    <div class="stats-grid mb-6">
+        <div class="stat-card">
+            <h3 class="font-semibold mb-3">Top業種</h3>
+            <ul class="top-list">
+                {% for item in stats.top_industries[:5] %}
+                <li>
+                    <span>{{ item.industry }}</span>
+                    <span class="font-semibold">{{ item.count }}</span>
+                </li>
+                {% else %}
+                <li class="text-gray-400">データなし</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="stat-card">
+            <h3 class="font-semibold mb-3">Top地域</h3>
+            <ul class="top-list">
+                {% for item in stats.top_locations[:5] %}
+                <li>
+                    <span>{{ item.location }}</span>
+                    <span class="font-semibold">{{ item.count }}</span>
+                </li>
+                {% else %}
+                <li class="text-gray-400">データなし</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- 履歴一覧 -->
+    <div class="mb-4">
+        <button onclick="clearAllHistory()" class="clear-all-btn">🗑️ 全履歴を削除</button>
+    </div>
+
+    <div class="history-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>会社名</th>
+                    <th>URL</th>
+                    <th>業種</th>
+                    <th>地域</th>
+                    <th>登録日</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="history-tbody">
+                <tr>
+                    <td colspan="6" class="empty-state">読み込み中...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ページネーション -->
+    <div class="pagination" id="pagination">
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+const itemsPerPage = 20;
+
+// 履歴を読み込み
+async function loadHistory(page = 1) {
+    currentPage = page;
+    const offset = (page - 1) * itemsPerPage;
+
+    try {
+        const response = await fetch(`/api/history?limit=${itemsPerPage}&offset=${offset}`);
+        const data = await response.json();
+
+        if (data.success) {
+            renderHistory(data.data);
+            renderPagination(data.total);
+        }
+    } catch (error) {
+        console.error('履歴読み込みエラー:', error);
+    }
+}
+
+// 履歴をテーブルに表示
+function renderHistory(items) {
+    const tbody = document.getElementById('history-tbody');
+
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">履歴がありません</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = items.map(item => `
+        <tr>
+            <td>${item.company_name || '-'}</td>
+            <td><a href="${item.url}" target="_blank" class="text-blue-600 hover:underline">${item.url.substring(0, 50)}...</a></td>
+            <td>${item.industry || '-'}</td>
+            <td>${item.location || '-'}</td>
+            <td>${item.created_at ? item.created_at.substring(0, 10) : '-'}</td>
+            <td>
+                <button onclick="deleteHistory('${item.url}')" class="delete-btn">削除</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ページネーション表示
+function renderPagination(total) {
+    const totalPages = Math.ceil(total / itemsPerPage);
+    const pagination = document.getElementById('pagination');
+
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+
+    let buttons = [];
+
+    // 前へボタン
+    buttons.push(`<button onclick="loadHistory(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>前へ</button>`);
+
+    // ページ番号
+    for (let i = 1; i <= Math.min(totalPages, 10); i++) {
+        buttons.push(`<button onclick="loadHistory(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`);
+    }
+
+    // 次へボタン
+    buttons.push(`<button onclick="loadHistory(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>次へ</button>`);
+
+    pagination.innerHTML = buttons.join('');
+}
+
+// 履歴を削除
+async function deleteHistory(url) {
+    if (!confirm('この履歴を削除しますか?')) return;
+
+    try {
+        const response = await fetch(`/api/history/${encodeURIComponent(url)}`, {
+            method: 'DELETE'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            alert('削除しました');
+            loadHistory(currentPage);
+            updateStats();
+        } else {
+            alert('削除に失敗しました: ' + data.error);
+        }
+    } catch (error) {
+        console.error('削除エラー:', error);
+        alert('削除に失敗しました');
+    }
+}
+
+// 全履歴を削除
+async function clearAllHistory() {
+    if (!confirm('本当にすべての履歴を削除しますか？この操作は取り消せません。')) return;
+
+    try {
+        const response = await fetch('/api/history/clear', {
+            method: 'POST'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+            loadHistory(1);
+            updateStats();
+        } else {
+            alert('削除に失敗しました: ' + data.error);
+        }
+    } catch (error) {
+        console.error('全削除エラー:', error);
+        alert('削除に失敗しました');
+    }
+}
+
+// 統計情報を更新
+async function updateStats() {
+    try {
+        const response = await fetch('/api/history/stats');
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById('total-count').textContent = data.stats.total_count;
+            const lastAdded = data.stats.last_added ? data.stats.last_added.substring(0, 10) : '-';
+            document.getElementById('last-added').textContent = lastAdded;
+        }
+    } catch (error) {
+        console.error('統計更新エラー:', error);
+    }
+}
+
+// 初期読み込み
+loadHistory(1);
+</script>
+{% endblock %}

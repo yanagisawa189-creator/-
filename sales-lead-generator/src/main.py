@@ -19,6 +19,7 @@ from data_enhancer import DataEnhancer
 from scorer import LeadScorer, ScoreAnalyzer
 from exporters import DataExporter, CSVTemplateGenerator
 from crm_integrations import CRMIntegrationManager
+from history_manager import HistoryManager
 
 # ロギング設定
 logging.basicConfig(
@@ -40,6 +41,7 @@ class SalesLeadGenerator:
         self.scorer = LeadScorer()
         self.exporter = DataExporter()
         self.crm_manager = CRMIntegrationManager()
+        self.history_manager = HistoryManager()
 
     async def generate_leads(
         self,
@@ -49,7 +51,8 @@ class SalesLeadGenerator:
         max_results: int = None,
         export_formats: List[str] = None,
         sync_to_crm: bool = False,
-        wordpress_only: bool = False
+        wordpress_only: bool = False,
+        exclude_history: bool = True
     ) -> Dict:
         """
         営業リードを生成するメイン処理
@@ -108,22 +111,41 @@ class SalesLeadGenerator:
                 logger.warning("No company information extracted")
                 return {"error": "No company information extracted", "success": False}
 
-            # ステップ5: データ拡張
+            # ステップ5: 履歴との重複チェック（オプション）
+            if exclude_history:
+                logger.info("Checking against history...")
+                original_count = len(companies)
+                companies = self.history_manager.filter_new_companies(companies)
+                filtered_count = original_count - len(companies)
+                logger.info(f"Filtered out {filtered_count} duplicate companies from history")
+
+                if not companies:
+                    logger.warning("All companies were duplicates from history")
+                    return {"error": "すべての企業が履歴に存在します。新しい企業が見つかりませんでした。", "success": False}
+
+            # ステップ6: データ拡張
             logger.info("Enhancing company data...")
             enhanced_companies = await self.data_enhancer.enhance_companies(companies)
             logger.info(f"Enhanced {len(enhanced_companies)} companies")
 
-            # ステップ6: スコアリング
+            # ステップ7: スコアリング
             logger.info("Scoring leads...")
             search_query = search_queries[0]  # 最初のクエリを代表として使用
             scored_leads = self.scorer.score_leads(enhanced_companies, search_query)
             logger.info(f"Scored {len(scored_leads)} leads")
 
+            # ステップ8: 履歴に追加
+            search_query_str = f"{industry} {location}"
+            if additional_keywords:
+                search_query_str += " " + " ".join(additional_keywords)
+            added_count = self.history_manager.add_companies(enhanced_companies, search_query_str)
+            logger.info(f"Added {added_count} new companies to history")
+
             # 統計情報生成
             stats = ScoreAnalyzer.analyze_score_distribution(scored_leads)
             logger.info(f"Statistics: {stats}")
 
-            # ステップ7: エクスポート
+            # ステップ9: エクスポート
             search_info = {
                 "industry": industry,
                 "location": location,
@@ -151,7 +173,7 @@ class SalesLeadGenerator:
 
             logger.info(f"Exported to: {list(export_results.keys())}")
 
-            # ステップ8: CRM連携（オプション）
+            # ステップ10: CRM連携（オプション）
             crm_results = {}
             if sync_to_crm:
                 logger.info("Syncing to CRM systems...")
