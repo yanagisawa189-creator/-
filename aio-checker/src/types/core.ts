@@ -48,6 +48,14 @@ export interface SerpResult {
   own_rank?: number;
 }
 
+export interface ScreenshotData {
+  desktop_path?: string;
+  mobile_path?: string;
+  aio_desktop_path?: string;
+  aio_mobile_path?: string;
+  timestamp: string;
+}
+
 export interface DailyResult {
   run_at: string;
   engine: 'google' | 'yahoo';
@@ -65,6 +73,8 @@ export interface DailyResult {
   serp_rank?: number;
   serp_top100: SerpItem[];
   screenshot_url?: string;
+  screenshot_path?: string;
+  screenshot_data?: ScreenshotData;
   html_snapshot_url?: string;
   job_status: 'ok' | 'partial' | 'fail';
   error_message?: string;

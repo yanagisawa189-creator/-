@@ -17,6 +17,9 @@ export const appConfig = {
   runOnce: process.env.RUN_ONCE === 'true',
 } as const;
 
+// Alias for backward compatibility
+export { appConfig as config };
+
 export const retryConfig: RetryConfig = {
   maxAttempts: parseInt(process.env.MAX_RETRY_ATTEMPTS || '3', 10),
   baseDelayMs: parseInt(process.env.RETRY_DELAY_MS || '1000', 10),

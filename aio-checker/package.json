@@ -14,20 +14,27 @@
   "bin": {
     "aio-checker": "./dist/index.js"
   },
-  "keywords": ["AIO", "AI Overviews", "Google", "SERP", "SEO"],
+  "keywords": [
+    "AIO",
+    "AI Overviews",
+    "Google",
+    "SERP",
+    "SEO"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0",
     "commander": "^11.1.0",
     "dotenv": "^16.3.1",
-    "node-fetch": "^3.3.2",
     "googleapis": "^131.0.0",
-    "@anthropic-ai/sdk": "^0.24.0"
+    "node-fetch": "^3.3.2",
+    "playwright": "^1.56.0"
   },
   "devDependencies": {
     "@types/node": "^20.8.0",
-    "tsx": "^4.0.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.0.0",
     "typescript": "^5.2.0"
   }
 }
